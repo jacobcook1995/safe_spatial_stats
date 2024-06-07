@@ -1,7 +1,7 @@
 library(safedata)
 
 # Find safedata directory to download data to and set
-set_safe_dir("~/Documents/VirtualRainforest/datasets")
+set_safe_dir("~/Documents/VirtualRainforest/datasets/safedata_dir")
 
 # Want to include the microclimate data, so include its record ID. The record ID
 # provided doesn't currently work, so I downloaded the files manually. I've left the
