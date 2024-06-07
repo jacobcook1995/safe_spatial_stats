@@ -3,7 +3,9 @@ library(safedata)
 # Find safedata directory to download data to and set
 set_safe_dir("~/Documents/VirtualRainforest/datasets")
 
-# Want to include the microclimate data, so include its record ID
+# Want to include the microclimate data, so include its record ID. The record ID
+# provided doesn't currently work, so I downloaded the files manually. I've left the
+# code in as this is something likely to be fixed in future.
 microclimate_id <- 7893600 # https://zenodo.org/records/7893600
 
 # Want to include roughness estimates
