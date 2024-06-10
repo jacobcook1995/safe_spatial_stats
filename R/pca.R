@@ -1,6 +1,7 @@
 library(safedata)
 library(raster)
 library(sf)
+library(dplyr)
 
 # Set safedata directory
 set_safe_dir("~/Documents/VirtualRainforest/datasets/safedata_dir")
@@ -20,10 +21,23 @@ sampled_plot_codes <- c(
 sampled_plot_regex <- paste("^", sampled_plot_codes, collapse = "|", sep = "")
 sampled_plots <- subset(vegetation_plots, grepl(sampled_plot_regex, location))
 
-# Load in AGB data
+# Make data frames to store all data for both all vegetation plots and just the
+# already sampled plots
+data_all_plots <- data.frame(plot_id = vegetation_plots$location)
+data_sampled_plots <- data.frame(plot_id = sampled_plots$location)
+
+# Load in AGB data, changing the relevant column name to match
 agb_data <- read.csv(
     "~/Documents/VirtualRainforest/datasets/random_bits/aboveground_biomass/LiDAR_Swinfield.csv"
 )
+colnames(agb_data)[colnames(agb_data) == "ID"] <- "plot_id"
+
+# Select only the plot_id and agb columns from biomass_df
+agb_data_selected <- agb_data %>% select(plot_id, agb)
+
+# Add the relevant AGB data to the data frame
+data_all_plots <- left_join(data_all_plots, agb_data_selected, by = "plot_id")
+data_sampled_plots <- left_join(data_sampled_plots, agb_data_selected, by = "plot_id")
 
 # Load in microclimate tif data (this wasn't downloaded using safedata so can't be
 # loaded using it)
@@ -40,6 +54,3 @@ roughness_data <- raster("~/Documents/VirtualRainforest/datasets/safedata_dir/63
 elevation_data <- raster("~/Documents/VirtualRainforest/datasets/safedata_dir/630004/3490488/SRTM_UTM50N_processed.tif")
 slope_data <- raster("~/Documents/VirtualRainforest/datasets/safedata_dir/630004/3490488/SRTM_UTM50N_slope.tif")
 aspect_data <- raster("~/Documents/VirtualRainforest/datasets/safedata_dir/630004/3490488/SRTM_UTM50N_aspect.tif")
-
-# Need to then put everything into a PCA. Input is a dataframe, so need to build a frame
-# as I go
