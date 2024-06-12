@@ -63,6 +63,29 @@ vpd_mean_data <- raster(file.path(
   data_folder, "random_bits/microclimate_data/VPD_mean.tif"
 ))
 
+# Define a function to replace NA values with the average of the nearest neighbors
+fill_na_with_nearest <- function(x) {
+  if (is.na(x[5])) { # The center cell in the 3x3 window
+    return(mean(x, na.rm = TRUE))
+  } else {
+    return(x[5]) # Return the original value if it's not NA
+  }
+}
+
+# Apply the focal function to fill NA values for the 4 microclimate datasets
+t_max_data <- focal(t_max_data,
+  w = matrix(1, 3, 3), fun = fill_na_with_nearest, na.rm = FALSE, pad = TRUE
+)
+t_mean_data <- focal(t_mean_data,
+  w = matrix(1, 3, 3), fun = fill_na_with_nearest, na.rm = FALSE, pad = TRUE
+)
+vpd_max_data <- focal(vpd_max_data,
+  w = matrix(1, 3, 3), fun = fill_na_with_nearest, na.rm = FALSE, pad = TRUE
+)
+vpd_mean_data <- focal(vpd_mean_data,
+  w = matrix(1, 3, 3), fun = fill_na_with_nearest, na.rm = FALSE, pad = TRUE
+)
+
 # Now add all of the microclimate data into the two dataframes
 data_all_plots$T_max <- extract(
   t_max_data, as(data_all_plots$geometry, "Spatial")
@@ -139,15 +162,43 @@ png(file.path(output_folder, "microclimate_pca_3.png"),
 nice_pca_plot(pca_with_microclimate, axis_1 = 2, axis_2 = 3)
 dev.off()
 
-# Make scree plot to show principal components
-layout(matrix(1:2, ncol = 2))
-screeplot(pca_with_microclimate)
-screeplot(pca_with_microclimate, type = "lines")
+# Separate out Maliau plots for separate PCA analysis
+maliau_plot_codes <- c("OG1_", "OG2_", "OG3_")
+maliau_plot_regex <- paste("^", maliau_plot_codes, collapse = "|", sep = "")
+
+data_maliau_plots <- data_all_plots[
+  grepl(maliau_plot_regex, rownames(data_all_plots)),
+]
+# Remove all the microclimate data as there isn't any for Maliau
+data_maliau_plots <- subset(
+  data_maliau_plots,
+  select = -c(T_max, T_mean, VPD_max, VPD_mean)
+)
+
+# Now run the PCA for the Maliau plots
+pca_maliau <- prcomp(
+  data_maliau_plots[
+    , !(names(data_maliau_plots) %in% c("geometry"))
+  ],
+  scale = TRUE
+)
+png(file.path(output_folder, "maliau_pca_1.png"),
+  width = 800, height = 600
+)
+nice_pca_plot(pca_maliau, axis_1 = 1, axis_2 = 2)
+dev.off()
+png(file.path(output_folder, "maliau_pca_2.png"),
+  width = 800, height = 600
+)
+nice_pca_plot(pca_maliau, axis_1 = 1, axis_2 = 3)
+dev.off()
+png(file.path(output_folder, "maliau_pca_3.png"),
+  width = 800, height = 600
+)
+nice_pca_plot(pca_maliau, axis_1 = 2, axis_2 = 3)
+dev.off()
 
 # Make a list with the codes identifying the plots that have already been sampled
 sampled_plot_codes <- c(
-  "B_", "C_", "E_", "LFE_", "VJR_", "RP_LFE_", "OG1_", "OG2_", "OG3_"
+  "B_", "C_", "E_", "LFE_", "VJR_", "RP_LFE_",
 )
-# Create a single regex looking for any of those patterns at the start of the string
-sampled_plot_regex <- paste("^", sampled_plot_codes, collapse = "|", sep = "")
-sampled_plots <- subset(vegetation_plots, grepl(sampled_plot_regex, location))
