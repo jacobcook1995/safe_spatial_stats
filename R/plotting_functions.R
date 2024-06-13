@@ -37,7 +37,11 @@ nice_pca_plot <- function(pca, axis_1 = 1, axis_2 = 2) {
       "PCA ", axis_2, " (",
       round(pca_summary$importance[3 * axis_2 - 1] * 100, 1), "%)"
     ),
-    xlim = new_xrange, ylim = new_yrange
+    xlim = new_xrange, ylim = new_yrange,
+    col = ifelse(pca$sampled, "green", "black")
+  )
+  legend("topright",
+    legend = c("Sampled", "Not Sampled"), pch = 19, col = c("green", "black")
   )
 
   # Add arrows and labels to the plot

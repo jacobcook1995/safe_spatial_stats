@@ -27,6 +27,16 @@ vegetation_plots <- st_transform(
 # already sampled plots
 data_all_plots <- data.frame(location = vegetation_plots$location)
 
+# Add information to the dataframe about whether the plot has been sampled
+sampled_plot_codes <- c(
+  "B_", "C_", "E_", "LFE_", "VJR_", "RP_LFE_", "OG1_", "OG2_", "OG3_", "DW_"
+)
+sampled_plot_regex <- paste("^", sampled_plot_codes, collapse = "|", sep = "")
+# Add a new column to indicate if a plot is sampled
+data_all_plots$sampled <- ifelse(
+  grepl(sampled_plot_regex, data_all_plots$location), TRUE, FALSE
+)
+
 # Add the geometries into two data frames
 data_all_plots <- merge(
   data_all_plots, vegetation_plots[, c("location", "geometry")],
@@ -140,10 +150,12 @@ plots_with_all_data <- data_all_plots[complete.cases(data_all_plots$T_max), ]
 
 pca_with_microclimate <- prcomp(
   plots_with_all_data[
-    , !(names(plots_with_all_data) %in% c("geometry"))
+    , !(names(plots_with_all_data) %in% c("geometry", "sampled"))
   ],
   scale = TRUE
 )
+# Add information about sampled plots to the PCA result
+pca_with_microclimate$sampled <- plots_with_all_data$sampled
 
 # Plot first three PCA axes
 png(file.path(output_folder, "microclimate_pca_1.png"),
@@ -178,10 +190,12 @@ data_maliau_plots <- subset(
 # Now run the PCA for the Maliau plots
 pca_maliau <- prcomp(
   data_maliau_plots[
-    , !(names(data_maliau_plots) %in% c("geometry"))
+    , !(names(data_maliau_plots) %in% c("geometry", "sampled"))
   ],
   scale = TRUE
 )
+# Add information about sampled plots to the PCA result
+pca_maliau$sampled <- data_maliau_plots$sampled
 png(file.path(output_folder, "maliau_pca_1.png"),
   width = 800, height = 600
 )
@@ -197,8 +211,3 @@ png(file.path(output_folder, "maliau_pca_3.png"),
 )
 nice_pca_plot(pca_maliau, axis_1 = 2, axis_2 = 3)
 dev.off()
-
-# Make a list with the codes identifying the plots that have already been sampled
-sampled_plot_codes <- c(
-  "B_", "C_", "E_", "LFE_", "VJR_", "RP_LFE_",
-)
