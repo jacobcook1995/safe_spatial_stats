@@ -4,6 +4,7 @@ library(sf)
 library(dplyr)
 
 source("./R/plotting_functions.R")
+source("./R/pca_space_division.R")
 
 # Set path to data folder on my local machine
 data_folder <- "~/Documents/VirtualRainforest/datasets/"
@@ -211,3 +212,10 @@ png(file.path(output_folder, "maliau_pca_3.png"),
 )
 nice_pca_plot(pca_maliau, axis_1 = 2, axis_2 = 3)
 dev.off()
+
+# Have decided on 8 plots for Maliau and 32 for the wider SAFE project area
+
+# Basically just hard coding the weights in for Maliau
+maliau_axis_n_boxes <- list("PC1" = 2, "PC2" = 2, "PC3" = 2)
+
+maliau_samples <- pca_space_division(pca_maliau, maliau_axis_n_boxes)
