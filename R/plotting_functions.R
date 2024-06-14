@@ -3,8 +3,11 @@ nice_pca_plot <- function(pca, axis_1 = 1, axis_2 = 2) {
   #'
   #' This function makes a clean plot of a PCA plot, this is for two axes that
   #' can be chosen by the user if no components are chosen then it defaults to
-  #' axis 1 and axis 2.
-
+  #' axis 1 and axis 2. The PCA input needs to have a sampled attribute
+  #' populated. This gets used to colour the points based on whether they
+  #' represent plots that have already been sampled. Oil palm and riparian plots
+  #' are also highlighted using shapes.
+  #'
   #' @param pca The output of the prcomp function.
   #' @param axis_1 The first axis to plot
   #' @param axis_2 The second axis to plots
