@@ -219,3 +219,18 @@ dev.off()
 maliau_axis_n_boxes <- list("PC1" = 2, "PC2" = 2, "PC3" = 2)
 
 maliau_samples <- pca_space_division(pca_maliau, maliau_axis_n_boxes)
+
+# Do the PCA analysis for just the sampled points in the SAFE project area
+sampled_safe_area <- plots_with_all_data %>% filter(sampled == TRUE)
+pca_sampled_safe <- prcomp(
+  sampled_safe_area[
+    , !(names(sampled_safe_area) %in% c("geometry", "sampled"))
+  ],
+  scale = TRUE
+)
+
+safe_axis_n_boxes <- list("PC1" = 8, "PC2" = 4, "PC3" = 2)
+
+safe_samples <- pca_space_division(pca_sampled_safe, safe_axis_n_boxes)
+
+# THEN FINAL THING IS TO SHOW PLOTS WITH THE POINTS ON
