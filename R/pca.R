@@ -233,4 +233,8 @@ safe_axis_n_boxes <- list("PC1" = 8, "PC2" = 4, "PC3" = 2)
 
 safe_samples <- pca_space_division(pca_sampled_safe, safe_axis_n_boxes)
 
+# Combine all plots to sample in a single alphabetically ordered vector
+all_samples_ids <- c(safe_samples$plot_id, maliau_samples$plot_id)
+all_samples_ids[order(names(setNames(all_samples_ids, all_samples_ids)))]
+
 # THEN FINAL THING IS TO SHOW PLOTS WITH THE POINTS ON
