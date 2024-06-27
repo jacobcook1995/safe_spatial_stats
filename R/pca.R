@@ -4,6 +4,7 @@ library(sf)
 library(dplyr)
 
 source("./R/plotting_functions.R")
+source("./R/pca_space_division.R")
 
 # Set path to data folder on my local machine
 data_folder <- "~/Documents/VirtualRainforest/datasets/"
@@ -211,3 +212,29 @@ png(file.path(output_folder, "maliau_pca_3.png"),
 )
 nice_pca_plot(pca_maliau, axis_1 = 2, axis_2 = 3)
 dev.off()
+
+# Have decided on 8 plots for Maliau and 32 for the wider SAFE project area
+
+# Basically just hard coding the weights in for Maliau
+maliau_axis_n_boxes <- list("PC1" = 2, "PC2" = 2, "PC3" = 2)
+
+maliau_samples <- pca_space_division(pca_maliau, maliau_axis_n_boxes)
+
+# Do the PCA analysis for just the sampled points in the SAFE project area
+sampled_safe_area <- plots_with_all_data %>% filter(sampled == TRUE)
+pca_sampled_safe <- prcomp(
+  sampled_safe_area[
+    , !(names(sampled_safe_area) %in% c("geometry", "sampled"))
+  ],
+  scale = TRUE
+)
+
+safe_axis_n_boxes <- list("PC1" = 8, "PC2" = 4, "PC3" = 2)
+
+safe_samples <- pca_space_division(pca_sampled_safe, safe_axis_n_boxes)
+
+# Combine all plots to sample in a single alphabetically ordered vector
+all_samples_ids <- c(safe_samples$plot_id, maliau_samples$plot_id)
+all_samples_ids[order(names(setNames(all_samples_ids, all_samples_ids)))]
+
+# THEN FINAL THING IS TO SHOW PLOTS WITH THE POINTS ON

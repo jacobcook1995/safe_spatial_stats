@@ -3,8 +3,11 @@ nice_pca_plot <- function(pca, axis_1 = 1, axis_2 = 2) {
   #'
   #' This function makes a clean plot of a PCA plot, this is for two axes that
   #' can be chosen by the user if no components are chosen then it defaults to
-  #' axis 1 and axis 2.
-
+  #' axis 1 and axis 2. The PCA input needs to have a sampled attribute
+  #' populated. This gets used to colour the points based on whether they
+  #' represent plots that have already been sampled. Oil palm and riparian plots
+  #' are also highlighted using shapes.
+  #'
   #' @param pca The output of the prcomp function.
   #' @param axis_1 The first axis to plot
   #' @param axis_2 The second axis to plots
@@ -23,6 +26,20 @@ nice_pca_plot <- function(pca, axis_1 = 1, axis_2 = 2) {
   labels_y_pos <- replace(labels_y_pos, low, "1")
   labels_y_pos <- replace(labels_y_pos, high, "3")
 
+  # Identify oil palm plots
+  oil_palm_plot_codes <- c("OP1_", "OP2_", "OP3_")
+  oil_palm_plot_regex <- paste("^", oil_palm_plot_codes,
+    collapse = "|", sep = ""
+  )
+  # Identify riparian plots
+  riparian_plot_codes <- "RP_"
+
+  # Assign point shapes based on the pattern match, 19 for circles, 17 for
+  # triangles, 15 for square
+  shapes <- ifelse(grepl(oil_palm_plot_regex, rownames(pca$x)), 17,
+    ifelse(grepl(riparian_plot_codes, rownames(pca$x)), 15, 19)
+  )
+
   # Define plot limits to make sure arrows aren't cut off
   new_xrange <- range(c(pca$x[, axis_1], arrows_x_pos))
   new_yrange <- range(c(pca$x[, axis_2], arrows_y_pos))
@@ -38,10 +55,13 @@ nice_pca_plot <- function(pca, axis_1 = 1, axis_2 = 2) {
       round(pca_summary$importance[3 * axis_2 - 1] * 100, 1), "%)"
     ),
     xlim = new_xrange, ylim = new_yrange,
-    col = ifelse(pca$sampled, "green", "black")
+    col = ifelse(pca$sampled, "#05ba05", "black"),
+    pch = shapes
   )
   legend("topright",
-    legend = c("Sampled", "Not Sampled"), pch = 19, col = c("green", "black")
+    legend = c("Sampled", "Not Sampled", "OP", "RP"),
+    pch = c(19, 19, 17, 19),
+    col = c("#05ba05", "black", "black", "black")
   )
 
   # Add arrows and labels to the plot
