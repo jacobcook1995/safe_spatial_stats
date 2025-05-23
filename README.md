@@ -1,14 +1,16 @@
 # safe_spatial_stats
 
-A repository for assessing the spatial variation of the SAFE project vegetation plots.
-This is primarily useful to the SAFE 2024 soil nutrient sampling campaign.
+A repository for analyses related to the SAFE 2024 soil nutrient sampling campaign.
 
-This includes a script (`download_script.R`) to download the relevant spatial data,
-microclimate, topographic, etc using the existing safedata system, and a script to
-perform a principal component analysis to categorise vegetation plots.
+At the moment, it contains two main analyses.
 
-We also want to perform an analysis of distances of plots from the nearest channel, this
-may or may not form a separate script.
+1) A search (using `safedata`) for existing data for the SAFE carbon plots and subplots.
+   The code related to this is found in the `detailed_carbon_data_search` folder
+2) An assessment of the spatial variation of the SAFE project vegetation plots. This
+   involves downloading the relevant spatial data, (microclimate, topographic, etc)
+   using the `safedata` system, and performing a principal component analysis to
+   categorise vegetation plots. The code related to this can be found in the
+   `subplot_selection` folder
 
 This README is likely to be the only documentation, should get updated with relevant
 details as the project develops
