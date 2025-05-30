@@ -87,25 +87,40 @@ relevant_plot_data <- clean_plot_data[,
   c("plot_code", "date", "time", "data_recorders"),
   drop = FALSE
 ]
-relevant_plot_data$ID <- rownames(relevant_plot_data)
+relevant_plot_data$id <- rownames(relevant_plot_data)
 
 # Merge in the relevant plot data based on the parent ID
 clean_core_data <- merge(
   clean_core_data, relevant_plot_data,
-  by.x = "parent_id", by.y = "ID", all.x = TRUE
+  by.x = "parent_id", by.y = "id", all.x = TRUE
 )
 
 # As the plot codes are unique the parent ID column can now be deleted
 clean_core_data$parent_id <- NULL
 
-# The core id should be made into a row name
+
+# Find location in plot. This requires an extra step as carbon plots used different
+# option on epicollect, which placed them in a different column
+location_in_plot <- ifelse(
+  raw_core_data$X18_Are_you_sampling_ == "Yes",
+  raw_core_data$X20_Where_has_the_cor, raw_core_data$X19_Which_point_has_t
+)
+
+# Create dataframe to store cleaned plot location data (and carbon plot status as a
+# bool)
+core_locations <- data.frame(
+  id = raw_core_data$ec5_uuid,
+  carbon_plot = ifelse(raw_core_data$X18_Are_you_sampling_ == "Yes", TRUE, FALSE),
+  location_in_plot = location_in_plot
+)
+
+# Then merge the cleaned locations data into the broader cleaned core data
+clean_core_data <- merge(clean_core_data, core_locations, by = "id", all.x = TRUE)
+
+# The core id should be made into a row name (THIS IS A CLEANING STEP THAT MIGHT NOT
+# REALLY BE NEEDED)
 clean_core_data <- clean_core_data %>% tibble::column_to_rownames(var = "id")
 
-
-# TODO - EXTRACT LOCATION NAMES, LOCATION NAME COLUMN DEPENDS ON WHETHER IT IS A CARBON
-# PLOT OR NOT
-# TODO - NEED TO CHECK THAT THE RECORDED LOCATION NAMES MATCH THE BAG LOCATION NAMES
-# (MASSIVELY ANNOYING IF THEY DON'T)
 
 # TODO - EXTRACT O-HORIZON DEPTHS. NEED TO FIND OUT WHEN I SWITCHED FROM MEASURING IN mm
 # to cm
