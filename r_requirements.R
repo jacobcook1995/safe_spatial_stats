@@ -9,3 +9,6 @@ library(languageserver)
 
 # This is required to use R with Jupyter
 library(IRkernel)
+
+# This is required for some of the dataframe transformations
+library(tibble)
