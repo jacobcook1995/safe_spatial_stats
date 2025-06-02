@@ -8,7 +8,7 @@ raw_plot_data <- read.csv(
 clean_plot_data <- data.frame(row.names = raw_plot_data$ec5_uuid)
 
 # Then add in the date and time information as well as the comments
-clean_plot_data$date <- raw_plot_data$X2_Date
+clean_plot_data$date <- as.Date(raw_plot_data$X2_Date, format = "%d/%m/%Y")
 clean_plot_data$time <- raw_plot_data$X3_Time
 clean_plot_data$notes <- raw_plot_data$X17_Notes
 
@@ -117,10 +117,31 @@ core_locations <- data.frame(
 # Then merge the cleaned locations data into the broader cleaned core data
 clean_core_data <- merge(clean_core_data, core_locations, by = "id", all.x = TRUE)
 
+# Extract the O-horizon heights to the core_data
+o_depths <- data.frame(
+  id = raw_core_data$ec5_uuid,
+  o_horizon_depth = raw_core_data$X22_How_deep_is_the_O
+)
+o_depths <- merge(
+  o_depths, clean_core_data[, c("date", "id"), drop = FALSE],
+  by = "id", all.x = TRUE
+)
+# These heights need to be cleaned because for the first sampling excursion (LFE +
+# RP_LFE + CarTow, 16/02/2024-19/02/2024) the O horizons were measured in mm rather than
+# cm.
+early_dates <- as.Date(c("2024-02-16", "2024-02-17", "2024-02-18", "2024-02-19"))
+o_depths$o_horizon_depth <-
+  ifelse(
+    o_depths$date %in% early_dates,
+    o_depths$o_horizon_depth / 10,
+    o_depths$o_horizon_depth
+  )
+
+
+# Once the cleaning has happened delete the date information and merge in
+o_depths$date <- NULL
+clean_core_data <- merge(clean_core_data, o_depths, by = "id", all.x = TRUE)
+
 # The core id should be made into a row name (THIS IS A CLEANING STEP THAT MIGHT NOT
 # REALLY BE NEEDED)
 clean_core_data <- clean_core_data %>% tibble::column_to_rownames(var = "id")
-
-
-# TODO - EXTRACT O-HORIZON DEPTHS. NEED TO FIND OUT WHEN I SWITCHED FROM MEASURING IN mm
-# to cm
