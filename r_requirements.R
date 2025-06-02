@@ -12,3 +12,6 @@ library(IRkernel)
 
 # This is required for some of the dataframe transformations
 library(tibble)
+
+# This is required for reading in Excel data
+library(readxl)

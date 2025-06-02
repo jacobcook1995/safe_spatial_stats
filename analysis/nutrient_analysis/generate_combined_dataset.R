@@ -1,4 +1,5 @@
 library(tibble)
+library(readxl)
 
 raw_plot_data <- read.csv(
   "./primary/safe-soil-nutrients-csv/form-1__nutrient-sampling-form.csv"
@@ -66,8 +67,8 @@ clean_plot_data$data_recorders <-
 # removes the entry for the aborted sampling.
 clean_plot_data <- clean_plot_data[
   !(
-    clean_plot_data$plot_code == "VJR_767" & clean_plot_data$date == "23/04/2024" &
-      clean_plot_data$notes == "Rain"
+    clean_plot_data$plot_code == "VJR_767" &
+      clean_plot_data$date == as.Date("2024/04/23") & clean_plot_data$notes == "Rain"
   ),
 ]
 
@@ -142,6 +143,42 @@ o_depths$o_horizon_depth <-
 o_depths$date <- NULL
 clean_core_data <- merge(clean_core_data, o_depths, by = "id", all.x = TRUE)
 
-# The core id should be made into a row name (THIS IS A CLEANING STEP THAT MIGHT NOT
-# REALLY BE NEEDED)
+# Finally the epicollect if for the core should be made into a row name
 clean_core_data <- clean_core_data %>% tibble::column_to_rownames(var = "id")
+
+# The names I provided the lab don't always match with what I used in epicollect, so I
+# need to provide a mapping
+plot_code_map <- c(
+  "DW1" = "DW_1", "DW2" = "DW_2", "DW3" = "DW_3", "Car-Bel" = "Car_Bel",
+  "Car-Ser" = "Car_Ser"
+)
+# Read in the lab data for the physical properties (measured once per plot).
+lab_data_physical <- read_excel(
+  "./primary/S12_2024 & S1_2025 - Results.xlsx",
+  sheet = "S12_2024 (N = 104)"
+)
+# Then replace the plot codes that differ with the versions used in epicollect
+lab_data_physical$`Sample ID` <-
+  ifelse(lab_data_physical$`Sample ID` %in% names(plot_code_map),
+    plot_code_map[lab_data_physical$`Sample ID`],
+    lab_data_physical$`Sample ID`
+  )
+
+# The relevant parts of the physical data can then be added to the cleaned plot data
+clean_plot_data <-
+  merge(clean_plot_data,
+    lab_data_physical[,
+      c(
+        "Sample ID", "Bulk density (g/cm3)",
+        "pH (in water)", "Clay (%)", "Silt (%)", "Sand (%)"
+      ),
+      drop = FALSE
+    ],
+    by.x = "plot_code", by.y = "Sample ID", all.x = TRUE
+  )
+
+# TODO - BIG QUESTION IS HOW TO COMBINE THIS DATA WITH THE DATA FROM EPICOLLECT
+# HAVE A PLOT AVERAGED BULK DENSITY, PH, AND SOIL FRACTION TO READ IN
+# THEN HAVE TOTAL C, N AND P. AND AVAILABLE P FOR A VARIETY OF SAMPLES. SOME OF THESE
+# ARE POOLED PLOT AVERAGES, AND SOME OF THESE ARE SPECIFIC CORES. 5 CORES PER PLOT IF
+# THEY ARE NOT SUBSAMPLED. IF A PLOT IS SUBSAMPLED A BULK VALUE IS NOT OBTAINED
