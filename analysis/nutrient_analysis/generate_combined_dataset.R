@@ -1,5 +1,6 @@
 library(tibble)
 library(readxl)
+library(dplyr)
 
 raw_plot_data <- read.csv(
   "./primary/safe-soil-nutrients-csv/form-1__nutrient-sampling-form.csv"
@@ -143,7 +144,7 @@ o_depths$o_horizon_depth <-
 o_depths$date <- NULL
 clean_core_data <- merge(clean_core_data, o_depths, by = "id", all.x = TRUE)
 
-# Finally the epicollect if for the core should be made into a row name
+# Finally the epicollect id for the core should be made into a row name
 clean_core_data <- clean_core_data %>% tibble::column_to_rownames(var = "id")
 
 # The names I provided the lab don't always match with what I used in epicollect, so I
@@ -177,8 +178,74 @@ clean_plot_data <-
     by.x = "plot_code", by.y = "Sample ID", all.x = TRUE
   )
 
-# TODO - BIG QUESTION IS HOW TO COMBINE THIS DATA WITH THE DATA FROM EPICOLLECT
-# HAVE A PLOT AVERAGED BULK DENSITY, PH, AND SOIL FRACTION TO READ IN
-# THEN HAVE TOTAL C, N AND P. AND AVAILABLE P FOR A VARIETY OF SAMPLES. SOME OF THESE
-# ARE POOLED PLOT AVERAGES, AND SOME OF THESE ARE SPECIFIC CORES. 5 CORES PER PLOT IF
-# THEY ARE NOT SUBSAMPLED. IF A PLOT IS SUBSAMPLED A BULK VALUE IS NOT OBTAINED
+# Now read in the lab data for the chemical properties (measured either once per plot or
+# for 5 cores in the plot).
+lab_data_chemical <- read_excel(
+  "./primary/S12_2024 & S1_2025 - Results.xlsx",
+  sheet = "S1_2025 (N = 276)"
+)
+
+# Separate out the data that is for specific cores rather than pooled samples for entire
+# plots
+chemical_data_cores <-
+  lab_data_chemical[lab_data_chemical$Remarks != "Pooled subsamples", ]
+
+# Define a mapping to convert the remarks into the location in plot names used in
+# epicollect
+location_mapping <- c(
+  "West 5 meters" = "West 5m", "West 10 meters" = "West 10m",
+  "East 5 meters" = "East 5m", "East 10 meters" = "East 10m",
+  "North 5 meters" = "North 5m", "North 10 meters" = "North 10m",
+  "South 5 meters" = "South 5m", "South 10 meters" = "South 10m",
+  "Centre" = "Centre"
+)
+
+chemical_data_cores$location_in_plot <-
+  location_mapping[as.character(chemical_data_cores$Remarks)]
+
+# Remarks is now no longer needed (along with Lab. No.) so they can be deleted
+chemical_data_cores$Remarks <- NULL
+chemical_data_cores$`Lab. No.` <- NULL
+
+# Add the information on the cores with chemical data to the cleaned core data
+clean_core_data <- clean_core_data %>%
+  left_join(chemical_data_cores,
+    by = c("plot_code" = "Sample ID", "location_in_plot"),
+  )
+
+# Separate out the data that is for entire plots rather than pooled samples for entire
+# plots
+chemical_data_plots <-
+  lab_data_chemical[lab_data_chemical$Remarks == "Pooled subsamples", ]
+
+# Remarks and Lab. No. are not needed so they can be deleted
+chemical_data_plots$Remarks <- NULL
+chemical_data_plots$`Lab. No.` <- NULL
+
+# Need to correct plot codes that don't match with epicollect
+chemical_data_plots$`Sample ID` <-
+  ifelse(chemical_data_plots$`Sample ID` %in% names(plot_code_map),
+    plot_code_map[chemical_data_plots$`Sample ID`],
+    chemical_data_plots$`Sample ID`
+  )
+
+# Then the chemical data obtained for whole plots can be added to the cleaned plot data
+clean_plot_data <- clean_plot_data %>%
+  left_join(chemical_data_plots,
+    by = c("plot_code" = "Sample ID"),
+  )
+
+# TODO - EVENTUALLY NEED TO PLOT DATA FROM THE CORE DATA AS WELL.
+# THE PLOT DATA CAN INCLUDE PLOT MEAN VALUE, PLOT UNCERTAINTY (IF MULTIPLE SAMPLES
+# PER PLOT) FOR EACH LAB VARIABLE, THEN MEAN AND UNCERTAINTY FOR THE O-HORIZON
+
+# ------------- Plotting --------------
+
+# Sum all the clay, silt and sand contents and then plot them as a histogram
+total_css <-
+  rowSums(lab_data_physical[, c("Clay (%)", "Silt (%)", "Sand (%)"), drop = FALSE])
+
+hist(total_css,
+  breaks = 50, col = "orange", main = "Clay + sand + silt",
+  xlab = "Combined clay, silt and sand (%)"
+)
