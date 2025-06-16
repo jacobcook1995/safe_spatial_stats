@@ -252,9 +252,35 @@ clean_plot_data <- clean_plot_data %>%
   left_join(plot_o_horizons, by = "plot_code")
 
 
-# TODO - THEN ADD O-HORIZON AVERAGE + SD FOR THE NUTRIENT DATA. IT PROBABLY
-# MAKES SENSE TO ADD THE NUTRIENT AVERAGES/SDS AT THE SAME TIME. NUTRIENT SAMPLES HAVE
-# ALWAYS BEEN TAKEN FROM 5 SPECIFIC CORES
+# Filter nutrient core data by whether they were used for nutrient subsampling (10m for
+# normal plot, 40m for carbon plot)
+#  TODO - I'm assuming that 40m was used for carbon plots, but need to double check this
+#  with Rolando
+nutrient_sample_locations <-
+  c(
+    "Centre", "East 10m", "West 10m", "North 10m", "South 10m", "East 40m", "West 40m",
+    "North 40m", "South 40m"
+  )
+
+nutrient_cores <- clean_core_data %>%
+  filter(location_in_plot %in% nutrient_sample_locations)
+
+# Then find stats for the o-horizons of the cores used for nutrient analysis
+nutrient_sample_o_horizons <- nutrient_cores %>%
+  group_by(plot_code) %>%
+  summarise(
+    nutrient_cores_o_horizon_mean = mean(o_horizon_depth),
+    nutrient_cores_o_horizon_sd = sd(o_horizon_depth),
+    .groups = "drop"
+  )
+
+clean_plot_data <- clean_plot_data %>%
+  left_join(nutrient_sample_o_horizons, by = "plot_code")
+
+
+# TODO - ADD THE NUTRIENT AVERAGES/SDS AT THE SAME TIME. NUTRIENT SAMPLES HAVE ALWAYS
+# BEEN TAKEN FROM 5 SPECIFIC CORES. THIS MAPS ONTO EXISTING COLUMNS (FOR THE MEANS NOT
+# THE SDS), AND SHOULD NOT BE DONE IF A ROW ISN'T SUBSAMPLED
 
 # THIS IS A USEFUL CHECK FOR MISSING VALUES colSums(is.na(clean_plot_data))
 
