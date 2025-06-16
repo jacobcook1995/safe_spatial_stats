@@ -239,14 +239,24 @@ clean_plot_data <- clean_plot_data %>%
 clean_plot_data$Subsampled <-
   ifelse((clean_plot_data$plot_code %in% nutrient_data_plots$`Sample ID`), FALSE, TRUE)
 
+# Average the O-horizon depths over each plot (relevant for bulk density, pH and soil
+# texture)
+plot_o_horizons <- clean_core_data %>%
+  group_by(plot_code) %>%
+  summarise(
+    plot_o_horizon_mean = mean(o_horizon_depth),
+    plot_o_horizon_sd = sd(o_horizon_depth),
+    .groups = "drop"
+  )
+clean_plot_data <- clean_plot_data %>%
+  left_join(plot_o_horizons, by = "plot_code")
 
-# TODO - EVENTUALLY NEED TO PLOT DATA FROM THE CORE DATA AS WELL.
-# THE PLOT DATA CAN INCLUDE PLOT MEAN VALUE, PLOT UNCERTAINTY (IF MULTIPLE SAMPLES
-# PER PLOT) FOR EACH LAB VARIABLE, THEN MEAN AND UNCERTAINTY FOR THE O-HORIZON
-# TODO - DOUBLE CHECK THIS
-# I THINK THAT THERE'S TWO RELEVANT O-HORIZON VALUES. CHEMICAL SAMPLE CAN BE BASED ON
-# AVERAGE OF 5 PLOTS, OR ENTIRE PLOT. BUT THE PHYSICAL DATA IS THE ALWAYS THE AVERAGE OF
-# THE PLOT
+
+# TODO - THEN ADD O-HORIZON AVERAGE + SD FOR THE NUTRIENT DATA. IT PROBABLY
+# MAKES SENSE TO ADD THE NUTRIENT AVERAGES/SDS AT THE SAME TIME. NUTRIENT SAMPLES HAVE
+# ALWAYS BEEN TAKEN FROM 5 SPECIFIC CORES
+
+# THIS IS A USEFUL CHECK FOR MISSING VALUES colSums(is.na(clean_plot_data))
 
 
 # ------------- Plotting --------------
