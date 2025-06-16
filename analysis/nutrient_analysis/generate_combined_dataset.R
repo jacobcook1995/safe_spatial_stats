@@ -178,17 +178,17 @@ clean_plot_data <-
     by.x = "plot_code", by.y = "Sample ID", all.x = TRUE
   )
 
-# Now read in the lab data for the chemical properties (measured either once per plot or
+# Now read in the lab data for the nutrient properties (measured either once per plot or
 # for 5 cores in the plot).
-lab_data_chemical <- read_excel(
+lab_data_nutrient <- read_excel(
   "./primary/S12_2024 & S1_2025 - Results.xlsx",
   sheet = "S1_2025 (N = 276)"
 )
 
 # Separate out the data that is for specific cores rather than pooled samples for entire
 # plots
-chemical_data_cores <-
-  lab_data_chemical[lab_data_chemical$Remarks != "Pooled subsamples", ]
+nutrient_data_cores <-
+  lab_data_nutrient[lab_data_nutrient$Remarks != "Pooled subsamples", ]
 
 # Define a mapping to convert the remarks into the location in plot names used in
 # epicollect
@@ -200,44 +200,54 @@ location_mapping <- c(
   "Centre" = "Centre"
 )
 
-chemical_data_cores$location_in_plot <-
-  location_mapping[as.character(chemical_data_cores$Remarks)]
+nutrient_data_cores$location_in_plot <-
+  location_mapping[as.character(nutrient_data_cores$Remarks)]
 
 # Remarks is now no longer needed (along with Lab. No.) so they can be deleted
-chemical_data_cores$Remarks <- NULL
-chemical_data_cores$`Lab. No.` <- NULL
+nutrient_data_cores$Remarks <- NULL
+nutrient_data_cores$`Lab. No.` <- NULL
 
 # Add the information on the cores with chemical data to the cleaned core data
 clean_core_data <- clean_core_data %>%
-  left_join(chemical_data_cores,
+  left_join(nutrient_data_cores,
     by = c("plot_code" = "Sample ID", "location_in_plot"),
   )
 
 # Separate out the data that is for entire plots rather than pooled samples for entire
 # plots
-chemical_data_plots <-
-  lab_data_chemical[lab_data_chemical$Remarks == "Pooled subsamples", ]
+nutrient_data_plots <-
+  lab_data_nutrient[lab_data_nutrient$Remarks == "Pooled subsamples", ]
 
 # Remarks and Lab. No. are not needed so they can be deleted
-chemical_data_plots$Remarks <- NULL
-chemical_data_plots$`Lab. No.` <- NULL
+nutrient_data_plots$Remarks <- NULL
+nutrient_data_plots$`Lab. No.` <- NULL
 
 # Need to correct plot codes that don't match with epicollect
-chemical_data_plots$`Sample ID` <-
-  ifelse(chemical_data_plots$`Sample ID` %in% names(plot_code_map),
-    plot_code_map[chemical_data_plots$`Sample ID`],
-    chemical_data_plots$`Sample ID`
+nutrient_data_plots$`Sample ID` <-
+  ifelse(nutrient_data_plots$`Sample ID` %in% names(plot_code_map),
+    plot_code_map[nutrient_data_plots$`Sample ID`],
+    nutrient_data_plots$`Sample ID`
   )
 
 # Then the chemical data obtained for whole plots can be added to the cleaned plot data
 clean_plot_data <- clean_plot_data %>%
-  left_join(chemical_data_plots,
+  left_join(nutrient_data_plots,
     by = c("plot_code" = "Sample ID"),
   )
+
+# Add a column to indicate whether a plot has been subsampled.
+clean_plot_data$Subsampled <-
+  ifelse((clean_plot_data$plot_code %in% nutrient_data_plots$`Sample ID`), FALSE, TRUE)
+
 
 # TODO - EVENTUALLY NEED TO PLOT DATA FROM THE CORE DATA AS WELL.
 # THE PLOT DATA CAN INCLUDE PLOT MEAN VALUE, PLOT UNCERTAINTY (IF MULTIPLE SAMPLES
 # PER PLOT) FOR EACH LAB VARIABLE, THEN MEAN AND UNCERTAINTY FOR THE O-HORIZON
+# TODO - DOUBLE CHECK THIS
+# I THINK THAT THERE'S TWO RELEVANT O-HORIZON VALUES. CHEMICAL SAMPLE CAN BE BASED ON
+# AVERAGE OF 5 PLOTS, OR ENTIRE PLOT. BUT THE PHYSICAL DATA IS THE ALWAYS THE AVERAGE OF
+# THE PLOT
+
 
 # ------------- Plotting --------------
 
