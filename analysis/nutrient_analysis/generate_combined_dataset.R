@@ -277,12 +277,56 @@ nutrient_sample_o_horizons <- nutrient_cores %>%
 clean_plot_data <- clean_plot_data %>%
   left_join(nutrient_sample_o_horizons, by = "plot_code")
 
+# Now extract only the cores that are analysed separately rather than combined
+subsampled_cores <- nutrient_cores %>%
+  filter(!(plot_code %in% nutrient_data_plots$`Sample ID`))
 
-# TODO - ADD THE NUTRIENT AVERAGES/SDS AT THE SAME TIME. NUTRIENT SAMPLES HAVE ALWAYS
-# BEEN TAKEN FROM 5 SPECIFIC CORES. THIS MAPS ONTO EXISTING COLUMNS (FOR THE MEANS NOT
-# THE SDS), AND SHOULD NOT BE DONE IF A ROW ISN'T SUBSAMPLED
+# For the cores that are used for nutrient subsampling find means and standard
+# deviations
+subsampled_nutrient_stats <- subsampled_cores %>%
+  group_by(plot_code) %>%
+  summarise(
+    mean_total_C = mean(`Total C (%)`),
+    sd_total_C = sd(`Total C (%)`),
+    mean_total_N = mean(`Total N (%)`),
+    sd_total_N = sd(`Total N (%)`),
+    mean_total_P = mean(`Total P (mg/kg)`),
+    sd_total_P = sd(`Total P (mg/kg)`),
+    mean_available_P = mean(`Available P (mg/kg)`),
+    sd_available_P = sd(`Available P (mg/kg)`),
+    .groups = "drop"
+  )
 
-# THIS IS A USEFUL CHECK FOR MISSING VALUES colSums(is.na(clean_plot_data))
+# The standard deviations are renamed before they get added to the ploy data
+subsampled_nutrient_stats <-
+  subsampled_nutrient_stats %>% rename(
+    `Total C (%)` = mean_total_C,
+    `Standard deviation total C` = sd_total_C,
+    `Total N (%)` = mean_total_N,
+    `Standard deviation total N` = sd_total_N,
+    `Total P (mg/kg)` = mean_total_P,
+    `Standard deviation total P` = sd_total_P,
+    `Available P (mg/kg)` = mean_available_P,
+    `Standard deviation available P` = sd_available_P
+  )
+
+# These columns already exist in the plot data and should only be replaced where there
+# isn't already a plot composite sample (i.e. where there's a NA value)
+cols_to_update <-
+  c("Total C (%)", "Total N (%)", "Total P (mg/kg)", "Available P (mg/kg)")
+
+# Add the nutrients averages and standard deviations to the cleaned plot data
+clean_plot_data <- clean_plot_data %>%
+  left_join(subsampled_nutrient_stats, by = "plot_code", suffix = c("", ".new")) %>%
+  mutate(across(
+    all_of(cols_to_update),
+    ~ coalesce(.x, get(paste0(cur_column(), ".new")))
+  )) %>%
+  select(-ends_with(".new"))
+
+# TODO - NEED TO WORK OUT HOW TO OUTPUT THIS DATA AS AN EXCEL FILE
+
+# USEFUL WAY OF CHECKING DATA colSums(is.na(clean_plot_data))
 
 
 # ------------- Plotting --------------
