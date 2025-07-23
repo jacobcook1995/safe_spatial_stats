@@ -1,6 +1,8 @@
 library(tibble)
-library(readxl)
 library(dplyr)
+library(openxlsx2)
+
+# ------------- Data cleaning --------------
 
 raw_plot_data <- read.csv(
   "./primary/safe-soil-nutrients-csv/form-1__nutrient-sampling-form.csv"
@@ -154,7 +156,7 @@ plot_code_map <- c(
   "Car-Ser" = "Car_Ser"
 )
 # Read in the lab data for the physical properties (measured once per plot).
-lab_data_physical <- read_excel(
+lab_data_physical <- read_xlsx(
   "./primary/S12_2024 & S1_2025 - Results.xlsx",
   sheet = "S12_2024 (N = 104)"
 )
@@ -180,7 +182,7 @@ clean_plot_data <-
 
 # Now read in the lab data for the nutrient properties (measured either once per plot or
 # for 5 cores in the plot).
-lab_data_nutrient <- read_excel(
+lab_data_nutrient <- read_xlsx(
   "./primary/S12_2024 & S1_2025 - Results.xlsx",
   sheet = "S1_2025 (N = 276)"
 )
@@ -324,10 +326,40 @@ clean_plot_data <- clean_plot_data %>%
   )) %>%
   select(-ends_with(".new"))
 
-# TODO - NEED TO WORK OUT HOW TO OUTPUT THIS DATA AS AN EXCEL FILE
+# ------------- Converting data to `safedata`` formatted Excel workbook --------------
 
-# USEFUL WAY OF CHECKING DATA colSums(is.na(clean_plot_data))
+# Reorder the data frames so that they are ordered by when samples were taken and into
+# my preferred column order
+plot_column_order <- c(
+  "plot_code", "date", "time", "pH (in water)", "Bulk density (g/cm3)", "Clay (%)",
+  "Silt (%)", "Sand (%)", "plot_o_horizon_mean", "plot_o_horizon_sd", "Total C (%)",
+  "Total N (%)", "Total P (mg/kg)", "Available P (mg/kg)",
+  "nutrient_cores_o_horizon_mean", "nutrient_cores_o_horizon_sd", "Subsampled",
+  "Standard deviation total C", "Standard deviation total N",
+  "Standard deviation total P", "Standard deviation available P", "data_recorders",
+  "notes"
+)
+core_column_order <- c(
+  "plot_code", "date", "time", "carbon_plot", "location_in_plot", "o_horizon_depth",
+  "Total C (%)", "Total N (%)", "Total P (mg/kg)", "Available P (mg/kg)",
+  "data_recorders"
+)
 
+clean_plot_data <-
+  clean_plot_data[order(clean_plot_data$date, clean_plot_data$time), plot_column_order]
+# For cores all get same time stamp within the plot (so further order by location)
+clean_core_data <- clean_core_data[
+  order(clean_core_data$date, clean_core_data$time, clean_core_data$location_in_plot),
+  core_column_order
+]
+
+# Add the dataframes to the workbooks with NA values properly outputted as strings
+wb <- wb_workbook()
+wb$add_worksheet("PlotData")
+wb$add_data("PlotData", clean_plot_data, na.strings = "NA")
+wb$add_worksheet("CoreData")
+wb$add_data("CoreData", clean_core_data, na.strings = "NA")
+wb_save(wb, "full_soil_nutrient_data.xlsx")
 
 # ------------- Plotting --------------
 
