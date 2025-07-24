@@ -328,6 +328,96 @@ clean_plot_data <- clean_plot_data %>%
 
 # ------------- Converting data to `safedata`` formatted Excel workbook --------------
 
+# Write out all of the summary metadata that I need to include
+summary_metadata <- list(
+  "SAFE Project ID" = c(234),
+  "Access status" = c("Embargo"),
+  "Title" = c(
+    "Soil nutrient concentrations across the SAFE project disturbance gradient."
+  ),
+  "Description" = c(paste(
+    "A study examining how soil physical and nutrient properties change along a",
+    "logging gradient. Multiple soil cores were taken from the SAFE project vegetation",
+    "and carbon plots, with the O-horizon depth being estimated for each core. One",
+    "core per plot was weighed weighed to estimate the bulk density of the plot. A",
+    "composite sample was made by combining the remaining cores for each plot, and the",
+    "soil pH and texture was found. Total carbon, nitrogen and phosphorus and",
+    "available phosphorus were also found by lab analysis. This was either done for a",
+    "composite sample of five cores, or for five cores individually. All lab analysis",
+    "were performed at the chemistry lab of the Forest Research Centre in Sepilok,",
+    "Sandakan, Sabah."
+  )),
+  "Embargo date" = c("24/07/2027"),
+  "Author name" = c("Jacob Cook", "Sandy Tsen", "Reuben Nilus", "Robert M Ewers"),
+  "Author email" = c("jc2017@ic.ac.uk", "", "", "r.ewers@ic.ac.uk"),
+  "Author affiliation" = c(
+    "Imperial College London", "Sabah Forestry Department",
+    "Sabah Forestry Department", "Imperial College London"
+  ),
+  "Author ORCID" = c("0000-0002-7320-1706", "", "", "0000-0002-9001-0610"),
+  "Worksheet name" = c("PlotData", "CoreData"),
+  "Worksheet description" = c(
+    "The soil physical and nutrient data for each SAFE vegetation plot.",
+    "The nutrient data for individual cores taken from SAFE vegetation plots."
+  ),
+  "Keywords" = c("Carbon", "Soil", "Nutrients", "SAFE core data", "SAFE project"),
+  "Publication DOI" = c(""),
+  "Permit type" = c("Research"),
+  "Permit authority" = c("Sabah Biodiversity Council"),
+  "Permit number" = c("JKM/MBS.1000-2/2 JLD. 16 (177)"),
+  # TODO - HAVE ASKED ROB IF ANYONE ELSE SHOULD BE CREDITED HERE
+  "Funding body" = c("NOMIS Foundation"),
+  "Funding type" = c("Grant"),
+  "Funding reference" = c("Distinguished Scientist Award to Robert M. Ewers"),
+  "Funding link" = c(
+    paste0(
+      "https://nomisfoundation.ch/projects/a-virtual-rainforest-for-understanding-the",
+      "-stability-resilience-and-sustainability-of-complex-ecosystems/"
+    )
+  ),
+  "Start date" = c("16/02/2024"),
+  "End date" = c("30/04/2024"),
+  "West" = c(116.75),
+  "East" = c(117.82),
+  "South" = c(4.50),
+  "North" = c(5.07)
+)
+
+# Make a dataframe where the first column is given by the label, and the other entries
+# are given by the values. Empty strings are inserted if specific vectors are below the
+# maximum width
+max_width <- max(sapply(summary_metadata, length))
+
+formatted_metadata <- do.call(rbind, lapply(names(summary_metadata), function(label) {
+  values <- summary_metadata[[label]]
+  c(label, values, rep("", max_width - length(values)))
+}))
+summary_metadata_frame <- as.data.frame(formatted_metadata)
+
+wb <- wb_workbook()
+wb <- wb_add_worksheet(wb, "Summary")
+
+# Have to loop over so that numeric values get written out as numeric values
+for (i in seq_len(nrow(summary_metadata_frame))) {
+  # Write row name (as character)
+  wb$add_data("Summary", x = summary_metadata_frame[i, 1], start_row = i, start_col = 1)
+
+  # Any output in possible numeric form is identified and converted
+  for (j in seq(2, ncol(summary_metadata_frame))) {
+    if (!is.na(suppressWarnings(as.numeric(summary_metadata_frame[i, j])))) {
+      wb$add_data(
+        "Summary",
+        x = as.numeric(summary_metadata_frame[i, j]), start_row = i, start_col = j
+      )
+    } else {
+      wb$add_data(
+        "Summary",
+        x = summary_metadata_frame[i, j], start_row = i, start_col = j
+      )
+    }
+  }
+}
+
 # Reorder the data frames so that they are ordered by when samples were taken and into
 # my preferred column order
 plot_column_order <- c(
@@ -354,12 +444,12 @@ clean_core_data <- clean_core_data[
 ]
 
 # Add the dataframes to the workbooks with NA values properly outputted as strings
-wb <- wb_workbook()
 wb$add_worksheet("PlotData")
 wb$add_data("PlotData", clean_plot_data, na.strings = "NA")
 wb$add_worksheet("CoreData")
 wb$add_data("CoreData", clean_core_data, na.strings = "NA")
-wb_save(wb, "full_soil_nutrient_data.xlsx")
+
+wb_save(wb, "SAFE_soil_nutrient_data.xlsx")
 
 # ------------- Plotting --------------
 
