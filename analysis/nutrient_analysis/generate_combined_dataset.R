@@ -424,6 +424,25 @@ for (i in seq_len(nrow(summary_metadata_frame))) {
   }
 }
 
+# I used DWx as a shorthand for OG3_DWx, these should be converted to the full plot code
+dw_map <- c("DW_1" = "OG3_DW1", "DW_2" = "OG3_DW2", "DW_3" = "OG3_DW3")
+clean_plot_data$plot_code <-
+  ifelse(
+    clean_plot_data$plot_code %in% names(dw_map), dw_map[clean_plot_data$plot_code],
+    clean_plot_data$plot_code
+  )
+clean_core_data$plot_code <-
+  ifelse(
+    clean_core_data$plot_code %in% names(dw_map), dw_map[clean_core_data$plot_code],
+    clean_core_data$plot_code
+  )
+
+# Add the locations used as a Locations sheet
+wb <- wb_add_worksheet(wb, "Locations")
+wb$add_data("Locations", x = "Location name", start_row = 1, start_col = 1)
+wb$add_data("Locations",
+  x = clean_plot_data$plot_code[order(clean_plot_data$plot_code)], start_row = 2
+)
 
 # Reorder the data frames so that they are ordered by when samples were taken and into
 # my preferred column order
