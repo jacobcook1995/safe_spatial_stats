@@ -347,8 +347,8 @@ summary_metadata <- list(
     "were performed at the chemistry lab of the Forest Research Centre in Sepilok,",
     "Sandakan, Sabah."
   )),
-  "Embargo date" = c("24/07/2027"),
-  "Author name" = c("Jacob Cook", "Sandy Tsen", "Reuben Nilus", "Robert M Ewers"),
+  "Embargo date" = c("2027-07-24"),
+  "Author name" = c("Cook, Jacob", "Tsen, Sandy", "Nilus, Reuben", "Ewers, Robert M."),
   "Author email" = c("jc2017@ic.ac.uk", "", "", "r.ewers@ic.ac.uk"),
   "Author affiliation" = c(
     "Imperial College London", "Sabah Forestry Department",
@@ -356,6 +356,7 @@ summary_metadata <- list(
   ),
   "Author ORCID" = c("0000-0002-7320-1706", "", "", "0000-0002-9001-0610"),
   "Worksheet name" = c("PlotData", "CoreData"),
+  "Worksheet title" = c("Soil data at plot level", "Soil data for specific cores"),
   "Worksheet description" = c(
     "The soil physical and nutrient data for each SAFE vegetation plot.",
     "The nutrient data for individual cores taken from SAFE vegetation plots."
@@ -375,8 +376,8 @@ summary_metadata <- list(
       "-stability-resilience-and-sustainability-of-complex-ecosystems/"
     )
   ),
-  "Start date" = c("16/02/2024"),
-  "End date" = c("30/04/2024"),
+  "Start date" = c("2024-02-16"),
+  "End date" = c("2024-04-30"),
   "West" = c(116.75),
   "East" = c(117.82),
   "South" = c(4.50),
@@ -397,6 +398,21 @@ summary_metadata_frame <- as.data.frame(formatted_metadata)
 wb <- wb_workbook()
 wb <- wb_add_worksheet(wb, "Summary")
 
+# Function to ensure that empty values don't get written, that numeric values are
+# written out as numbers, and that dates are written as dates
+output_value <- function(value, i, j) {
+  # Don't print out empty values
+  if (value != "") {
+    if (!is.na(suppressWarnings(as.numeric(value)))) {
+      wb$add_data("Summary", x = as.numeric(value), start_row = i, start_col = j)
+    } else if (grepl("^\\d{4}-\\d{2}-\\d{2}$", value)) {
+      wb$add_data("Summary", x = as.Date(value), start_row = i, start_col = j)
+    } else {
+      wb$add_data("Summary", x = value, start_row = i, start_col = j)
+    }
+  }
+}
+
 # Have to loop over so that numeric values get written out as numeric values
 for (i in seq_len(nrow(summary_metadata_frame))) {
   # Write row name (as character)
@@ -404,22 +420,14 @@ for (i in seq_len(nrow(summary_metadata_frame))) {
 
   # Any output in possible numeric form is identified and converted
   for (j in seq(2, ncol(summary_metadata_frame))) {
-    if (!is.na(suppressWarnings(as.numeric(summary_metadata_frame[i, j])))) {
-      wb$add_data(
-        "Summary",
-        x = as.numeric(summary_metadata_frame[i, j]), start_row = i, start_col = j
-      )
-    } else {
-      wb$add_data(
-        "Summary",
-        x = summary_metadata_frame[i, j], start_row = i, start_col = j
-      )
-    }
+    output_value(value = summary_metadata_frame[i, j], i = i, j = j)
   }
 }
 
+
 # Reorder the data frames so that they are ordered by when samples were taken and into
 # my preferred column order
+# TODO - A LOT OF THESE NAMES ARE BAD, I SHOULD ADDRESS THIS WHEN I SORT UNITS ETC
 plot_column_order <- c(
   "plot_code", "date", "time", "pH (in water)", "Bulk density (g/cm3)", "Clay (%)",
   "Silt (%)", "Sand (%)", "plot_o_horizon_mean", "plot_o_horizon_sd", "Total C (%)",
