@@ -444,37 +444,130 @@ wb$add_data("Locations",
   x = clean_plot_data$plot_code[order(clean_plot_data$plot_code)], start_row = 2
 )
 
-# Reorder the data frames so that they are ordered by when samples were taken and into
-# my preferred column order
-# TODO - A LOT OF THESE NAMES ARE BAD, I SHOULD ADDRESS THIS WHEN I SORT UNITS ETC
-plot_column_order <- c(
-  "plot_code", "date", "time", "pH (in water)", "Bulk density (g/cm3)", "Clay (%)",
-  "Silt (%)", "Sand (%)", "plot_o_horizon_mean", "plot_o_horizon_sd", "Total C (%)",
-  "Total N (%)", "Total P (mg/kg)", "Available P (mg/kg)",
-  "nutrient_cores_o_horizon_mean", "nutrient_cores_o_horizon_sd", "Subsampled",
-  "Standard deviation total C", "Standard deviation total N",
-  "Standard deviation total P", "Standard deviation available P", "data_recorders",
-  "notes"
-)
-core_column_order <- c(
-  "plot_code", "date", "time", "carbon_plot", "location_in_plot", "o_horizon_depth",
-  "Total C (%)", "Total N (%)", "Total P (mg/kg)", "Available P (mg/kg)",
-  "data_recorders"
+# Write out all the metadata here so that it can be inserted into the data worksheets.
+# This involves a simplified name ("new_name"), the field type, the values a categorical
+# field can take (empty for non-categorical fields) a description of what the field is,
+# the units of the field (where relevant), and the method used to generate the data
+# TODO - ADD description, units, method
+all_column_metadata <- list(
+  plot_code = list(new_name = "plot_code", field_type = "Location"),
+  date = list(new_name = "date", field_type = "Date"),
+  time = list(new_name = "time", field_type = "Time"),
+  carbon_plot = list(
+    new_name = "carbon_plot", field_type = "Categorical", levels = "TRUE;FALSE"
+  ),
+  location_in_plot = list(new_name = "location_in_plot", field_type = "ID"),
+  o_horizon_depth = list(new_name = "core_o_horizon", field_type = "Numeric"),
+  `pH (in water)` = list(new_name = "pH", field_type = "Numeric"),
+  `Bulk density (g/cm3)` = list(new_name = "bulk_density", field_type = "Numeric"),
+  `Clay (%)` = list(new_name = "clay", field_type = "Numeric"),
+  `Silt (%)` = list(new_name = "silt", field_type = "Numeric"),
+  `Sand (%)` = list(new_name = "sand", field_type = "Numeric"),
+  plot_o_horizon_mean = list(new_name = "plot_mean_o_horizon", field_type = "Numeric"),
+  plot_o_horizon_sd = list(new_name = "sd_plot_o_horizon", field_type = "Numeric"),
+  `Total C (%)` = list(new_name = "total_carbon", field_type = "Numeric"),
+  `Total N (%)` = list(new_name = "total_nitrogen", field_type = "Numeric"),
+  `Total P (mg/kg)` = list(new_name = "total_phosphorus", field_type = "Numeric"),
+  `Available P (mg/kg)` = list(
+    new_name = "available_phosphorus", field_type = "Numeric"
+  ),
+  nutrient_cores_o_horizon_mean = list(
+    new_name = "nutrient_cores_mean_o_horizon", field_type = "Numeric"
+  ),
+  nutrient_cores_o_horizon_sd = list(
+    new_name = "sd_nutrient_cores_o_horizon", field_type = "Numeric"
+  ),
+  Subsampled = list(
+    new_name = "Subsampled", field_type = "Categorical", levels = "TRUE;FALSE"
+  ),
+  `Standard deviation total C` = list(
+    new_name = "sd_total_carbon", field_type = "Numeric"
+  ),
+  `Standard deviation total N` = list(
+    new_name = "sd_total_nitrogen", field_type = "Numeric"
+  ),
+  `Standard deviation total P` = list(
+    new_name = "sd_total_phosphorus", field_type = "Numeric"
+  ),
+  `Standard deviation available P` = list(
+    new_name = "sd_available_phosphorus", field_type = "Numeric"
+  ),
+  data_recorders = list(new_name = "data_recorders", field_type = "Comments"),
+  notes = list(new_name = "notes", field_type = "Comments")
 )
 
+# Find columns that are present in each datasheet
+plot_data_columns <- intersect(names(all_column_metadata), names(clean_plot_data))
+core_data_columns <- intersect(names(all_column_metadata), names(clean_core_data))
+
+# Reorder the data frames so that they are ordered by when samples were taken and into
+# my preferred column order
 clean_plot_data <-
-  clean_plot_data[order(clean_plot_data$date, clean_plot_data$time), plot_column_order]
+  clean_plot_data[order(clean_plot_data$date, clean_plot_data$time), plot_data_columns]
 # For cores all get same time stamp within the plot (so further order by location)
 clean_core_data <- clean_core_data[
   order(clean_core_data$date, clean_core_data$time, clean_core_data$location_in_plot),
-  core_column_order
+  core_data_columns
 ]
 
-# Add the dataframes to the workbooks with NA values properly outputted as strings
+# Make maps to rename columns by and then rename the columns to simpler names
+plot_rename_map <- sapply(
+  plot_data_columns, function(name) all_column_metadata[[name]]$new_name,
+  USE.NAMES = TRUE
+)
+core_rename_map <- sapply(
+  core_data_columns, function(name) all_column_metadata[[name]]$new_name,
+  USE.NAMES = TRUE
+)
+
+names(clean_plot_data)[names(clean_plot_data) %in% names(plot_rename_map)] <-
+  plot_rename_map[
+    names(clean_plot_data)[names(clean_plot_data) %in% names(plot_rename_map)]
+  ]
+names(clean_core_data)[names(clean_core_data) %in% names(core_rename_map)] <-
+  core_rename_map[
+    names(clean_core_data)[names(clean_core_data) %in% names(core_rename_map)]
+  ]
+
+# Define metadata categories and gather worksheet metadata to write out along with the
+# data itself
+metadata_categories <-
+  c("field_type", "levels", "description", "units", "method", "field_name")
+
+plot_metadata <- sapply(all_column_metadata[plot_data_columns], function(x) {
+  c(
+    field_type = x[["field_type"]],
+    levels = if (!is.null(x[["levels"]])) x[["levels"]] else NA
+  )
+})
+core_metadata <- sapply(all_column_metadata[core_data_columns], function(x) {
+  c(
+    field_type = x[["field_type"]],
+    levels = if (!is.null(x[["levels"]])) x[["levels"]] else NA
+  )
+})
+
+# Add the data frames to the workbooks with NA values properly outputted as strings
 wb$add_worksheet("PlotData")
-wb$add_data("PlotData", clean_plot_data, na.strings = "NA")
+wb$add_data("PlotData", x = metadata_categories, start_row = 1)
+wb$add_data(
+  "PlotData",
+  x = plot_metadata, start_col = 2, col_names = FALSE, na.strings = ""
+)
+wb$add_data(
+  "PlotData", clean_plot_data,
+  na.strings = "NA", start_col = 2, start_row = length(metadata_categories)
+)
 wb$add_worksheet("CoreData")
-wb$add_data("CoreData", clean_core_data, na.strings = "NA")
+wb$add_data("CoreData", x = metadata_categories, start_row = 1)
+wb$add_data(
+  "CoreData",
+  x = core_metadata, start_col = 2, col_names = FALSE, na.strings = ""
+)
+wb$add_data(
+  "CoreData", clean_core_data,
+  na.strings = "NA", start_col = 2, start_row = length(metadata_categories)
+)
 
 wb_save(wb, "SAFE_soil_nutrient_data.xlsx")
 
