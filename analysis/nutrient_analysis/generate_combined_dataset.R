@@ -448,7 +448,7 @@ wb$add_data("Locations",
 # This involves a simplified name ("new_name"), the field type, the values a categorical
 # field can take (empty for non-categorical fields) a description of what the field is,
 # the units of the field (where relevant), and the method used to generate the data
-# TODO - ADD description, units, method
+# TODO - ADD description, method
 all_column_metadata <- list(
   plot_code = list(new_name = "plot_code", field_type = "Location"),
   date = list(new_name = "date", field_type = "Date"),
@@ -457,40 +457,54 @@ all_column_metadata <- list(
     new_name = "carbon_plot", field_type = "Categorical", levels = "TRUE;FALSE"
   ),
   location_in_plot = list(new_name = "location_in_plot", field_type = "ID"),
-  o_horizon_depth = list(new_name = "core_o_horizon", field_type = "Numeric"),
-  `pH (in water)` = list(new_name = "pH", field_type = "Numeric"),
-  `Bulk density (g/cm3)` = list(new_name = "bulk_density", field_type = "Numeric"),
-  `Clay (%)` = list(new_name = "clay", field_type = "Numeric"),
-  `Silt (%)` = list(new_name = "silt", field_type = "Numeric"),
-  `Sand (%)` = list(new_name = "sand", field_type = "Numeric"),
-  plot_o_horizon_mean = list(new_name = "plot_mean_o_horizon", field_type = "Numeric"),
-  plot_o_horizon_sd = list(new_name = "sd_plot_o_horizon", field_type = "Numeric"),
-  `Total C (%)` = list(new_name = "total_carbon", field_type = "Numeric"),
-  `Total N (%)` = list(new_name = "total_nitrogen", field_type = "Numeric"),
-  `Total P (mg/kg)` = list(new_name = "total_phosphorus", field_type = "Numeric"),
+  o_horizon_depth = list(
+    new_name = "core_o_horizon", field_type = "Numeric", units = "cm"
+  ),
+  `pH (in water)` = list(
+    new_name = "pH", field_type = "Numeric", units = "standard units"
+  ),
+  `Bulk density (g/cm3)` = list(
+    new_name = "bulk_density", field_type = "Numeric", units = "g/(cm^3)"
+  ),
+  `Clay (%)` = list(new_name = "clay", field_type = "Numeric", units = "%"),
+  `Silt (%)` = list(new_name = "silt", field_type = "Numeric", units = "%"),
+  `Sand (%)` = list(new_name = "sand", field_type = "Numeric", units = "%"),
+  plot_o_horizon_mean = list(
+    new_name = "plot_mean_o_horizon", field_type = "Numeric", units = "cm"
+  ),
+  plot_o_horizon_sd = list(
+    new_name = "sd_plot_o_horizon", field_type = "Numeric", units = "cm"
+  ),
+  `Total C (%)` = list(new_name = "total_carbon", field_type = "Numeric", units = "%"),
+  `Total N (%)` = list(
+    new_name = "total_nitrogen", field_type = "Numeric", units = "%"
+  ),
+  `Total P (mg/kg)` = list(
+    new_name = "total_phosphorus", field_type = "Numeric", units = "mg/kg"
+  ),
   `Available P (mg/kg)` = list(
-    new_name = "available_phosphorus", field_type = "Numeric"
+    new_name = "available_phosphorus", field_type = "Numeric", units = "mg/kg"
   ),
   nutrient_cores_o_horizon_mean = list(
-    new_name = "nutrient_cores_mean_o_horizon", field_type = "Numeric"
+    new_name = "nutrient_cores_mean_o_horizon", field_type = "Numeric", units = "cm"
   ),
   nutrient_cores_o_horizon_sd = list(
-    new_name = "sd_nutrient_cores_o_horizon", field_type = "Numeric"
+    new_name = "sd_nutrient_cores_o_horizon", field_type = "Numeric", units = "cm"
   ),
   Subsampled = list(
     new_name = "Subsampled", field_type = "Categorical", levels = "TRUE;FALSE"
   ),
   `Standard deviation total C` = list(
-    new_name = "sd_total_carbon", field_type = "Numeric"
+    new_name = "sd_total_carbon", field_type = "Numeric", units = "%"
   ),
   `Standard deviation total N` = list(
-    new_name = "sd_total_nitrogen", field_type = "Numeric"
+    new_name = "sd_total_nitrogen", field_type = "Numeric", units = "%"
   ),
   `Standard deviation total P` = list(
-    new_name = "sd_total_phosphorus", field_type = "Numeric"
+    new_name = "sd_total_phosphorus", field_type = "Numeric", units = "mg/kg"
   ),
   `Standard deviation available P` = list(
-    new_name = "sd_available_phosphorus", field_type = "Numeric"
+    new_name = "sd_available_phosphorus", field_type = "Numeric", units = "mg/kg"
   ),
   data_recorders = list(new_name = "data_recorders", field_type = "Comments"),
   notes = list(new_name = "notes", field_type = "Comments")
@@ -534,17 +548,15 @@ names(clean_core_data)[names(clean_core_data) %in% names(core_rename_map)] <-
 metadata_categories <-
   c("field_type", "levels", "description", "units", "method", "field_name")
 
+get_or_na <- function(x, name) {
+  if (!is.null(x[[name]])) x[[name]] else NA
+}
+
 plot_metadata <- sapply(all_column_metadata[plot_data_columns], function(x) {
-  c(
-    field_type = x[["field_type"]],
-    levels = if (!is.null(x[["levels"]])) x[["levels"]] else NA
-  )
+  sapply(metadata_categories, function(category) get_or_na(x, category))
 })
 core_metadata <- sapply(all_column_metadata[core_data_columns], function(x) {
-  c(
-    field_type = x[["field_type"]],
-    levels = if (!is.null(x[["levels"]])) x[["levels"]] else NA
-  )
+  sapply(metadata_categories, function(category) get_or_na(x, category))
 })
 
 # Add the data frames to the workbooks with NA values properly outputted as strings
