@@ -366,15 +366,18 @@ summary_metadata <- list(
   "Permit type" = c("Research"),
   "Permit authority" = c("Sabah Biodiversity Council"),
   "Permit number" = c("JKM/MBS.1000-2/2 JLD. 16 (177)"),
-  # TODO - HAVE ASKED ROB IF ANYONE ELSE SHOULD BE CREDITED HERE
-  "Funding body" = c("NOMIS Foundation"),
-  "Funding type" = c("Grant"),
-  "Funding reference" = c("Distinguished Scientist Award to Robert M. Ewers"),
+  "Funding body" = c("NOMIS Foundation", "Sime Darby Foundation", "NERC"),
+  "Funding type" = c("Grant", "Grant", "Grant"),
+  "Funding reference" = c(
+    "Distinguished Scientist Award to Robert M. Ewers", "SAFE Core data", "NE/P002218/1"
+  ),
   "Funding link" = c(
     paste0(
       "https://nomisfoundation.ch/projects/a-virtual-rainforest-for-understanding-the",
       "-stability-resilience-and-sustainability-of-complex-ecosystems/"
-    )
+    ),
+    "",
+    "https://gtr.ukri.org/projects?ref=NE/P002218/1"
   ),
   "Start date" = c("2024-02-16"),
   "End date" = c("2024-04-30"),
@@ -447,8 +450,7 @@ wb$add_data("Locations",
 # Write out all the metadata here so that it can be inserted into the data worksheets.
 # This involves a simplified name ("new_name"), the field type, the values a categorical
 # field can take (empty for non-categorical fields) a description of what the field is,
-# the units of the field (where relevant), and the method used to generate the data
-# TODO - ADD method
+# and (where relevant) the units of the field and the method used to generate the data
 all_column_metadata <- list(
   plot_code = list(
     new_name = "plot_code", description = "SAFE Project plot name",
@@ -474,68 +476,115 @@ all_column_metadata <- list(
   ),
   o_horizon_depth = list(
     new_name = "core_o_horizon", description = "Depth at which soil O-horizon occurs",
-    field_type = "Numeric", units = "cm"
+    field_type = "Numeric", units = "cm",
+    method = "Horizon estimated visually, measured with a tape measure"
   ),
   `pH (in water)` = list(
     new_name = "pH", field_type = "Numeric",
-    description = "pH (in water) of the soil sample", units = "standard units"
+    description = "pH (in water) of the soil sample", units = "standard units",
+    method = paste(
+      "Measured in water using a pH meter. Analysed for a composite sample of all",
+      "cores in a plot"
+    )
   ),
   `Bulk density (g/cm3)` = list(
     new_name = "bulk_density", field_type = "Numeric",
-    description = "Bulk density of soil in the plot", units = "g/(cm^3)"
+    description = "Bulk density of soil in the plot", units = "g/(cm^3)",
+    method = paste(
+      "From each plot an additional core was taken for bulk density estimation. This",
+      "core was oven dried and then weighed. The bulk density could then be estimated",
+      "based on this weight and the known volume of the corer."
+    )
   ),
   # TODO - Need to ask Rolando the details of this, i.e. whether it is percentage of the
   # total or of the mineral component
   `Clay (%)` = list(
     new_name = "clay", field_type = "Numeric",
-    description = "Fraction of the soil sample that is clay", units = "%"
+    description = "Fraction of the soil sample that is clay", units = "%",
+    method = paste(
+      "Determined using pipette and wet sieving method. Analysed for a composite",
+      "sample of all cores in a plot"
+    )
   ),
   `Silt (%)` = list(
     new_name = "silt", field_type = "Numeric",
-    description = "Fraction of the soil sample that is silt", units = "%"
+    description = "Fraction of the soil sample that is silt", units = "%",
+    method = paste(
+      "Determined using pipette and wet sieving method. Analysed for a composite",
+      "sample of all cores in a plot"
+    )
   ),
   `Sand (%)` = list(
     new_name = "sand", field_type = "Numeric",
-    description = "Fraction of the soil sample that is sand", units = "%"
+    description = "Fraction of the soil sample that is sand", units = "%",
+    method = paste(
+      "Determined using pipette and wet sieving method. Analysed for a composite",
+      "sample of all cores in a plot"
+    )
   ),
   plot_o_horizon_mean = list(
     new_name = "plot_mean_o_horizon", field_type = "Numeric",
     description = "Mean O-horizon depth across all cores taken from the plot",
-    units = "cm"
+    units = "cm",
+    method = paste(
+      "O-horizon averaged across the cores composited for texture and pH analysis",
+      "(i.e. all cores expect the bulk density core). Horizons were estimated visually",
+      "and measured with a tape measure"
+    )
   ),
   plot_o_horizon_sd = list(
     new_name = "sd_plot_o_horizon", field_type = "Numeric",
     description = (
       "Standard deviation of O-horizon depth across all cores taken from the plot"
     ),
-    units = "cm"
+    units = "cm",
+    method = paste(
+      "Standard deviation of O-horizon averaged across the cores composited for",
+      "texture and pH analysis (i.e. all cores expect the bulk density core). Horizons",
+      "were estimated visually and measured with a tape measure"
+    )
   ),
   `Total C (%)` = list(
     new_name = "total_carbon", field_type = "Numeric",
     description = "Fraction of the soil sample that is carbon (in any form)",
-    units = "%"
+    units = "%",
+    method = "Found using a CN928 combustion gas analyser."
   ),
   `Total N (%)` = list(
     new_name = "total_nitrogen", field_type = "Numeric",
     description = "Fraction of the soil sample that is nitrogen (in any form)",
-    units = "%"
+    units = "%",
+    method = "Found using a CN928 combustion gas analyser."
   ),
   `Total P (mg/kg)` = list(
     new_name = "total_phosphorus", field_type = "Numeric",
     description = "Fraction of the soil sample that is phosphorus (in any form)",
-    units = "mg/kg"
+    units = "mg/kg",
+    method = paste(
+      "Total P was extracted using the sulfuric acid-hydrogen peroxide digestion",
+      "method, and the digestate was analysed spectrally."
+    )
   ),
   `Available P (mg/kg)` = list(
     new_name = "available_phosphorus", field_type = "Numeric",
     description = "Fraction of the soil sample that is plant available phosphorus",
-    units = "mg/kg"
+    units = "mg/kg",
+    method = paste(
+      "Available P was extracted using the Bray II method, and molybdate-reactive",
+      "PO4-P was determined colorimetrically using the molybdate-blue method.",
+      "Absorbance was measured using a UV-2600i spectrometer."
+    )
   ),
   nutrient_cores_o_horizon_mean = list(
     new_name = "nutrient_cores_mean_o_horizon", field_type = "Numeric",
     description = (
       "Mean O-horizon depth across the cores used for nutrient analysis"
     ),
-    units = "cm"
+    units = "cm",
+    method = paste(
+      "O-horizon averaged across the cores used for nutrient analysis (i.e. five cores",
+      "in total). Horizons were estimated visually and measured with a tape measure"
+    )
   ),
   nutrient_cores_o_horizon_sd = list(
     new_name = "sd_nutrient_cores_o_horizon", field_type = "Numeric",
@@ -543,7 +592,12 @@ all_column_metadata <- list(
       "Standard deviation of O-horizon depth across the cores used for nutrient",
       "analysis"
     ),
-    units = "cm"
+    units = "cm",
+    method = paste(
+      "Standard deviation of O-horizon averaged across the cores used for nutrient",
+      "analysis (i.e. five cores in total). Horizons were estimated visually and",
+      "measured with a tape measure"
+    )
   ),
   Subsampled = list(
     new_name = "Subsampled", field_type = "Categorical",
@@ -559,7 +613,11 @@ all_column_metadata <- list(
       "Standard deviation of fraction of the soil sample that is carbon (in any form)",
       "between cores. This is only relevant for subsampled plots."
     ),
-    units = "%"
+    units = "%",
+    method = paste(
+      "Standard deviation of total carbon for the subsampled plots (average over five",
+      "cores)."
+    )
   ),
   `Standard deviation total N` = list(
     new_name = "sd_total_nitrogen", field_type = "Numeric",
@@ -567,7 +625,11 @@ all_column_metadata <- list(
       "Standard deviation of fraction of the soil sample that is nitrogen (in any",
       "form) between cores. This is only relevant for subsampled plots."
     ),
-    units = "%"
+    units = "%",
+    method = paste(
+      "Standard deviation of total nitrogen for the subsampled plots (average over",
+      "five cores)."
+    )
   ),
   `Standard deviation total P` = list(
     new_name = "sd_total_phosphorus", field_type = "Numeric",
@@ -575,7 +637,11 @@ all_column_metadata <- list(
       "Standard deviation of fraction of the soil sample that is phosphorus (in any",
       "form) between cores. This is only relevant for subsampled plots."
     ),
-    units = "mg/kg"
+    units = "mg/kg",
+    method = paste(
+      "Standard deviation of total phosphorus for the subsampled plots (average over",
+      "five cores)."
+    )
   ),
   `Standard deviation available P` = list(
     new_name = "sd_available_phosphorus", field_type = "Numeric",
@@ -583,7 +649,11 @@ all_column_metadata <- list(
       "Standard deviation of fraction of the soil sample that is plant available",
       "phosphorus between cores. This is only relevant for subsampled plots."
     ),
-    units = "mg/kg"
+    units = "mg/kg",
+    method = paste(
+      "Standard deviation of available phosphorus for the subsampled plots (average",
+      "over five cores)."
+    )
   ),
   data_recorders = list(
     new_name = "data_recorders", description = "Who gathered the data in the field",
