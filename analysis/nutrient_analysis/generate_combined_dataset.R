@@ -725,6 +725,10 @@ wb$add_data(
   "PlotData", clean_plot_data,
   na.strings = "NA", start_col = 2, start_row = length(metadata_categories)
 )
+wb$add_data(
+  "PlotData", seq_len(nrow(clean_plot_data)),
+  start_row = length(metadata_categories) + 1
+)
 wb$add_worksheet("CoreData")
 wb$add_data("CoreData", x = metadata_categories, start_row = 1)
 wb$add_data(
@@ -734,6 +738,10 @@ wb$add_data(
 wb$add_data(
   "CoreData", clean_core_data,
   na.strings = "NA", start_col = 2, start_row = length(metadata_categories)
+)
+wb$add_data(
+  "CoreData", seq_len(nrow(clean_core_data)),
+  start_row = length(metadata_categories) + 1
 )
 
 wb_save(wb, "SAFE_soil_nutrient_data.xlsx")
