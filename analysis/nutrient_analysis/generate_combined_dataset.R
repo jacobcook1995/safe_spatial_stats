@@ -326,6 +326,11 @@ clean_plot_data <- clean_plot_data %>%
   )) %>%
   select(-ends_with(".new"))
 
+# I want to write out boolean values as yes/no, so they need to be converted before
+# output starts
+clean_plot_data$Subsampled <- ifelse(clean_plot_data$Subsampled, "Yes", "No")
+clean_core_data$carbon_plot <- ifelse(clean_core_data$carbon_plot, "Yes", "No")
+
 # ------------- Converting data to `safedata`` formatted Excel workbook --------------
 
 # Write out all of the summary metadata that I need to include
@@ -467,7 +472,7 @@ all_column_metadata <- list(
   carbon_plot = list(
     new_name = "carbon_plot", field_type = "Categorical",
     description = "Whether the plot is a SAFE project carbon plot",
-    levels = "TRUE;FALSE"
+    levels = "Yes;No"
   ),
   location_in_plot = list(
     new_name = "location_in_plot",
@@ -605,7 +610,7 @@ all_column_metadata <- list(
       "Whether the five cores used for nutrient analysis were combined into a single",
       "composite sample, or analysed separately (i.e. subsampled)"
     ),
-    levels = "TRUE;FALSE"
+    levels = "Yes;No"
   ),
   `Standard deviation total C` = list(
     new_name = "sd_total_carbon", field_type = "Numeric",
