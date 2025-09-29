@@ -10,8 +10,10 @@ library(languageserver)
 # This is required to use R with Jupyter
 library(IRkernel)
 
-# This is required for some of the dataframe transformations
+# These are required for some of the dataframe transformations
 library(tibble)
+library(dplyr)
 
 # This is required for reading and writing Excel data
 library(openxlsx2)
+
