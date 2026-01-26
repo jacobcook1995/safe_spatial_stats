@@ -326,11 +326,6 @@ clean_plot_data <- clean_plot_data %>%
   )) %>%
   select(-ends_with(".new"))
 
-# I want to write out boolean values as yes/no, so they need to be converted before
-# output starts
-clean_plot_data$Subsampled <- ifelse(clean_plot_data$Subsampled, "Yes", "No")
-clean_core_data$carbon_plot <- ifelse(clean_core_data$carbon_plot, "Yes", "No")
-
 # ------------- Converting data to `safedata`` formatted Excel workbook --------------
 
 # Write out all of the summary metadata that I need to include
@@ -470,9 +465,8 @@ all_column_metadata <- list(
     field_type = "Time"
   ),
   carbon_plot = list(
-    new_name = "carbon_plot", field_type = "Categorical",
-    description = "Whether the plot is a SAFE project carbon plot",
-    levels = "Yes;No"
+    new_name = "carbon_plot", field_type = "Logical",
+    description = "Whether the plot is a SAFE project carbon plot"
   ),
   location_in_plot = list(
     new_name = "location_in_plot",
@@ -605,12 +599,11 @@ all_column_metadata <- list(
     )
   ),
   Subsampled = list(
-    new_name = "Subsampled", field_type = "Categorical",
+    new_name = "Subsampled", field_type = "Logical",
     description = paste(
       "Whether the five cores used for nutrient analysis were combined into a single",
       "composite sample, or analysed separately (i.e. subsampled)"
-    ),
-    levels = "Yes;No"
+    )
   ),
   `Standard deviation total C` = list(
     new_name = "sd_total_carbon", field_type = "Numeric",
@@ -706,7 +699,7 @@ names(clean_core_data)[names(clean_core_data) %in% names(core_rename_map)] <-
 # Define metadata categories and gather worksheet metadata to write out along with the
 # data itself
 metadata_categories <-
-  c("field_type", "levels", "description", "units", "method", "field_name")
+  c("field_type", "description", "units", "method", "field_name")
 
 get_or_na <- function(x, name) {
   if (!is.null(x[[name]])) x[[name]] else NA
