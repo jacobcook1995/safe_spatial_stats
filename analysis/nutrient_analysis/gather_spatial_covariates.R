@@ -34,5 +34,22 @@ library(terra)
 # All of the above datasets can be downloaded from Zenodo, so the download etc
 # should happen in the `ve_data_science` repo
 
+# Sentinel-2 quarterly mosaics can be downloaded from the Copernicus browser
+# (https://browser.dataspace.copernicus.eu/). The area we are interested in
+# (basically the central area of Sabah) is covered by 9 mosaics. We have
+# downloaded these 9 mosaics for Q1 of 2024, which is the time period that most
+# of the field work occurred within. We believe this is a good assumption as
+# vegetation cover should not (generally) vary much month by month. However, we
+# may have to revisit this if there are significant gaps in the coverage for the
+# Q1 mosaic. This script now calculates the Enhanced Vegetation Index (EVI)
+# based on these mosaics and returns a single file to be used for downstream
+# analysis.
+
+mosaic_dates <- c("2024_Q1")
+
+mosaic_coords <-
+  c("50NMK", "50NML", "50NMM", "50NNK", "50NNL", "50NNM", "50NPK", "50NPL", "50NPM")
+
+# TODO - USE THESE DETAILS TO GENERATE THE FILE PATHS AND LOAD IN THE DATA
+
 # TODO - ONCE WE HAVE SOIL TYPE DATA THIS SHOULD ALSO BE ADDED
-# TODO - WORK OUT HOW TO DOWNLOAD THE RELEVANT SATELLITE PRODUCTS
