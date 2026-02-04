@@ -50,6 +50,29 @@ mosaic_dates <- c("2024_Q1")
 mosaic_coords <-
   c("50NMK", "50NML", "50NMM", "50NNK", "50NNL", "50NNM", "50NPK", "50NPL", "50NPM")
 
-# TODO - USE THESE DETAILS TO GENERATE THE FILE PATHS AND LOAD IN THE DATA
+mosaic_folders <-
+  file.path(
+    "./primary/Sentinel_data",
+    paste0("Sentinel-2_mosaic_", mosaic_dates, "_", mosaic_coords, "_0_0")
+  )
+
+# Loop over folders creating a raster file for each one and then combining at the end
+rasters <- vector("list", length(mosaic_folders))
+
+for (i in seq_along(mosaic_folders)) {
+  files <- list.files(mosaic_folders[i], pattern = "\\.tif$", full.names = TRUE)
+  raster <- rast(files)
+  rasters[[i]] <- raster
+}
+
+combined_raster <- rasters[[1]]
+
+# This does run but really slowly
+# TODO - I SHOULD CALCULATE EVI FIRST AND THEN COMBINE THE FILES
+for (i in 2:length(rasters)) {
+  combined_raster <- mosaic(combined_raster, rasters[[i]])
+  print(sprintf("Mosaic %s merged in.", i))
+}
+
 
 # TODO - ONCE WE HAVE SOIL TYPE DATA THIS SHOULD ALSO BE ADDED
