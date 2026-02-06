@@ -61,11 +61,16 @@ mosaic_folders <-
 evi_rasters <- vector("list", length(mosaic_folders))
 
 for (i in seq_along(mosaic_folders)) {
-  files <- list.files(mosaic_folders[i], pattern = "\\.tif$", full.names = TRUE)
-  raster <- rast(files)
+  # save relevant bands as single band rasters (divide by 10000 as bands are
+  # stored * 10000 see
+  # https://documentation.dataspace.copernicus.eu/Data/SentinelMissions/Sentinel2.html)
+  nir <- rast(file.path(mosaic_folders[i], "B08.tif")) / 10000
+  red <- rast(file.path(mosaic_folders[i], "B04.tif")) / 10000
+  blue <- rast(file.path(mosaic_folders[i], "B02.tif")) / 10000
+  # TODO - USE THIS BAND TO DISCARD DATA WITH 0 observations
+  observations <- rast(file.path(mosaic_folders[i], "observations.tif"))
   # Calculate EVI as a raster file
-  evi_raster <- 2.5 * (raster[["B08"]] - raster[["B04"]]) /
-    (raster[["B08"]] + 6 * raster[["B04"]] - 7.5 * raster[["B02"]] + 1)
+  evi_raster <- 2.5 * (nir - red) / ((nir + 6 * red - 7.5 * blue) + 1)
   names(evi_raster) <- "EVI"
   evi_rasters[[i]] <- evi_raster
 }
