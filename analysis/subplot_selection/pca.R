@@ -75,11 +75,11 @@ vpd_mean_data <- raster(file.path(
 ))
 
 # Define a function to replace NA values with the average of the nearest neighbors
-fill_na_with_nearest <- function(x) {
-  if (is.na(x[5])) { # The center cell in the 3x3 window
-    return(mean(x, na.rm = TRUE))
+fill_na_with_nearest <- function(var) {
+  if (is.na(var[5])) { # The center cell in the 3x3 window
+    mean(var, na.rm = TRUE)
   } else {
-    return(x[5]) # Return the original value if it's not NA
+    var[5] # Return the original value if it's not NA
   }
 }
 
