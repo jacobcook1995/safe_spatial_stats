@@ -67,11 +67,15 @@ for (i in seq_along(mosaic_folders)) {
   nir <- rast(file.path(mosaic_folders[i], "B08.tif")) / 10000
   red <- rast(file.path(mosaic_folders[i], "B04.tif")) / 10000
   blue <- rast(file.path(mosaic_folders[i], "B02.tif")) / 10000
-  # TODO - USE THIS BAND TO DISCARD DATA WITH 0 observations
-  observations <- rast(file.path(mosaic_folders[i], "observations.tif"))
   # Calculate EVI as a raster file
   evi_raster <- 2.5 * (nir - red) / ((nir + 6 * red - 7.5 * blue) + 1)
   names(evi_raster) <- "EVI"
+  # Load in observations raster and mask cases with zero observations
+  observations <- rast(file.path(mosaic_folders[i], "observations.tif"))
+  evi_raster <- mask(evi_raster, observations, maskvalues = 0)
+  # Remove anomalous EVI values
+  evi_raster[evi_raster > 1] <- NA
+  evi_raster[evi_raster < -1] <- NA
   evi_rasters[[i]] <- evi_raster
 }
 print("EVI mosaics generated")
