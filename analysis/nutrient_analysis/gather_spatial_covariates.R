@@ -56,23 +56,29 @@ mosaic_folders <-
     paste0("Sentinel-2_mosaic_", mosaic_dates, "_", mosaic_coords, "_0_0")
   )
 
-# Loop over folders creating a raster file for each one and then combining at the end
-rasters <- vector("list", length(mosaic_folders))
+# Loop over folders creating an EVI raster file for each one and then combining
+# at the end
+evi_rasters <- vector("list", length(mosaic_folders))
 
 for (i in seq_along(mosaic_folders)) {
   files <- list.files(mosaic_folders[i], pattern = "\\.tif$", full.names = TRUE)
   raster <- rast(files)
-  rasters[[i]] <- raster
+  # Calculate EVI as a raster file
+  evi_raster <- 2.5 * (raster[["B08"]] - raster[["B04"]]) /
+    (raster[["B08"]] + 6 * raster[["B04"]] - 7.5 * raster[["B02"]] + 1)
+  names(evi_raster) <- "EVI"
+  evi_rasters[[i]] <- evi_raster
 }
+print("EVI mosaics generated")
 
-combined_raster <- rasters[[1]]
+combined_evi_raster <- evi_rasters[[1]]
 
-# This does run but really slowly
-# TODO - I SHOULD CALCULATE EVI FIRST AND THEN COMBINE THE FILES
-for (i in 2:length(rasters)) {
-  combined_raster <- mosaic(combined_raster, rasters[[i]])
+for (i in 2:length(evi_rasters)) {
+  combined_evi_raster <- mosaic(combined_evi_raster, evi_rasters[[i]])
   print(sprintf("Mosaic %s merged in.", i))
 }
+
+writeRaster(combined_evi_raster, "Sabah_EVI_2024_Q1.tif", overwrite = TRUE)
 
 
 # TODO - ONCE WE HAVE SOIL TYPE DATA THIS SHOULD ALSO BE ADDED
