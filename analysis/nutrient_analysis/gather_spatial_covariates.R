@@ -88,6 +88,3 @@ for (i in 2:length(evi_rasters)) {
 }
 
 writeRaster(combined_evi_raster, "Sabah_EVI_2024_Q1.tif", overwrite = TRUE)
-
-
-# TODO - ONCE WE HAVE SOIL TYPE DATA THIS SHOULD ALSO BE ADDED
