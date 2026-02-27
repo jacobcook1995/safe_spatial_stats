@@ -403,15 +403,20 @@ wb <- wb_add_worksheet(wb, "Summary")
 
 # Function to ensure that empty values don't get written, that numeric values are
 # written out as numbers, and that dates are written as dates
-output_value <- function(value, i, j) {
+output_value <- function(value, row_index, column_index) {
   # Don't print out empty values
   if (value != "") {
     if (!is.na(suppressWarnings(as.numeric(value)))) {
-      wb$add_data("Summary", x = as.numeric(value), start_row = i, start_col = j)
+      wb$add_data("Summary",
+        x = as.numeric(value), start_row = row_index, start_col = column_index
+      )
     } else if (grepl("^\\d{4}-\\d{2}-\\d{2}$", value)) {
-      wb$add_data("Summary", x = as.Date(value), start_row = i, start_col = j)
+      wb$add_data(
+        "Summary",
+        x = as.Date(value), start_row = row_index, start_col = column_index
+      )
     } else {
-      wb$add_data("Summary", x = value, start_row = i, start_col = j)
+      wb$add_data("Summary", x = value, start_row = row_index, start_col = column_index)
     }
   }
 }
@@ -423,7 +428,7 @@ for (i in seq_len(nrow(summary_metadata_frame))) {
 
   # Any output in possible numeric form is identified and converted
   for (j in seq(2, ncol(summary_metadata_frame))) {
-    output_value(value = summary_metadata_frame[i, j], i = i, j = j)
+    output_value(value = summary_metadata_frame[i, j], row_index = i, column_index = j)
   }
 }
 
@@ -701,15 +706,15 @@ names(clean_core_data)[names(clean_core_data) %in% names(core_rename_map)] <-
 metadata_categories <-
   c("field_type", "description", "units", "method", "field_name")
 
-get_or_na <- function(x, name) {
-  if (!is.null(x[[name]])) x[[name]] else NA
+get_or_na <- function(data, name) {
+  if (!is.null(data[[name]])) data[[name]] else NA
 }
 
-plot_metadata <- sapply(all_column_metadata[plot_data_columns], function(x) {
-  sapply(metadata_categories, function(category) get_or_na(x, category))
+plot_metadata <- sapply(all_column_metadata[plot_data_columns], function(data) {
+  sapply(metadata_categories, function(category) get_or_na(data, category))
 })
-core_metadata <- sapply(all_column_metadata[core_data_columns], function(x) {
-  sapply(metadata_categories, function(category) get_or_na(x, category))
+core_metadata <- sapply(all_column_metadata[core_data_columns], function(data) {
+  sapply(metadata_categories, function(category) get_or_na(data, category))
 })
 
 # Add the data frames to the workbooks with NA values properly outputted as strings
@@ -742,7 +747,7 @@ wb$add_data(
   start_row = length(metadata_categories) + 1
 )
 
-wb_save(wb, "SAFE_soil_nutrient_data.xlsx")
+wb_save(wb, "output/SAFE_soil_nutrient_data.xlsx")
 
 # ------------- Plotting --------------
 
