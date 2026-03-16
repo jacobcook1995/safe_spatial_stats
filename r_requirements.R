@@ -16,3 +16,7 @@ library(dplyr)
 
 # This is required for reading and writing Excel data
 library(openxlsx2)
+
+# These are needed for spatial processing
+library(terra)
+library(sf)

@@ -22,7 +22,7 @@ points_from_Terhi <- data.frame(
 # Convert to sf object
 deadwood_points <- st_as_sf(
   points_from_Terhi,
-  coords = c("lat", "lon"),
+  coords = c("lon", "lat"),
   crs = 4326 # WGS84 (standard GeoJSON CRS)
 )
 
