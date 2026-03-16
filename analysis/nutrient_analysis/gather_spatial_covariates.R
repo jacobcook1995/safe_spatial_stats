@@ -87,4 +87,4 @@ for (i in 2:length(evi_rasters)) {
   print(sprintf("Mosaic %s merged in.", i))
 }
 
-writeRaster(combined_evi_raster, "Sabah_EVI_2024_Q1.tif", overwrite = TRUE)
+writeRaster(combined_evi_raster, "./output/Sabah_EVI_2024_Q1.tif", overwrite = TRUE)
