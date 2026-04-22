@@ -109,6 +109,12 @@ plot_data$elevation <- extract(elevation_raster, plot_centers)[, 2]
 evi_raster <- rast(file.path("./output/Sabah_EVI_2024_Q1.tif"))
 plot_data$evi <- extract(evi_raster, plot_centers)[, 2]
 
+# Load in LIDAR data
+lidar_data <- read.csv(file.path("./primary/LiDAR_Swinfield.csv"))
+
+# Add the AGB data to the existing plot dataframe
+plot_data <- plot_data %>%
+  left_join(lidar_data %>% select(ID, agb), by = c("plot_code" = "ID"))
 
 # Look at variation vs elevation first
 
@@ -150,24 +156,24 @@ plot_variances(
 # For total carbon
 plot_variances(
   plot_mean = plot_data$total_carbon, plot_sd = plot_data$sd_total_carbon,
-  x_axis = plot_data$evi, plot_name = "figures/total_carbon_vs_biomass.png",
-  plot_title = "Variation in total carbon with biomass",
+  x_axis = plot_data$evi, plot_name = "figures/total_carbon_vs_EVI.png",
+  plot_title = "Variation in total carbon with remotely sensed biomass",
   x_unit = "Enhanced vegetation index", y_unit = "Total Carbon (%)"
 )
 
 # Total nitrogen
 plot_variances(
   plot_mean = plot_data$total_nitrogen, plot_sd = plot_data$sd_total_nitrogen,
-  x_axis = plot_data$evi, plot_name = "figures/total_nitrogen_vs_biomass.png",
-  plot_title = "Variation in total nitrogen with biomass",
+  x_axis = plot_data$evi, plot_name = "figures/total_nitrogen_vs_EVI.png",
+  plot_title = "Variation in total nitrogen with remotely sensed biomass",
   x_unit = "Enhanced vegetation index", y_unit = "Total Nitrogen (%)"
 )
 
 # Total phosphorus
 plot_variances(
   plot_mean = plot_data$total_phosphorus, plot_sd = plot_data$sd_total_phosphorus,
-  x_axis = plot_data$evi, plot_name = "figures/total_phosphorus_vs_biomass.png",
-  plot_title = "Variation in total phosphorus with biomass",
+  x_axis = plot_data$evi, plot_name = "figures/total_phosphorus_vs_EVI.png",
+  plot_title = "Variation in total phosphorus with remotely sensed biomass",
   x_unit = "Enhanced vegetation index", y_unit = "Total Phosphorus (mg/kg)"
 )
 
@@ -175,7 +181,44 @@ plot_variances(
 plot_variances(
   plot_mean = plot_data$available_phosphorus,
   plot_sd = plot_data$sd_available_phosphorus, x_axis = plot_data$evi,
-  plot_name = "figures/available_phosphorus_vs_biomass.png",
+  plot_name = "figures/available_phosphorus_vs_EVI.png",
   x_unit = "Enhanced vegetation index", y_unit = "Available Phosphorus (mg/kg)",
-  plot_title = "Variation in available phosphorus with biomass"
+  plot_title = "Variation in available phosphorus with remotely sensed biomass"
+)
+
+# Then look a variation vs LIDAR derived AGB
+
+# For total carbon
+plot_variances(
+  plot_mean = plot_data$total_carbon, plot_sd = plot_data$sd_total_carbon,
+  x_axis = plot_data$agb, plot_name = "figures/total_carbon_vs_agb.png",
+  plot_title = "Variation in total carbon with LIDAR estimated biomass",
+  x_unit = "Above ground biomass (tonnes per hectare)", y_unit = "Total Carbon (%)"
+)
+
+# Total nitrogen
+plot_variances(
+  plot_mean = plot_data$total_nitrogen, plot_sd = plot_data$sd_total_nitrogen,
+  x_axis = plot_data$agb, plot_name = "figures/total_nitrogen_vs_agb.png",
+  plot_title = "Variation in total nitrogen with LIDAR estimated biomass",
+  x_unit = "Above ground biomass (tonnes per hectare)", y_unit = "Total Nitrogen (%)"
+)
+
+# Total phosphorus
+plot_variances(
+  plot_mean = plot_data$total_phosphorus, plot_sd = plot_data$sd_total_phosphorus,
+  x_axis = plot_data$agb, plot_name = "figures/total_phosphorus_vs_agb.png",
+  plot_title = "Variation in total phosphorus with LIDAR estimated biomass",
+  x_unit = "Above ground biomass (tonnes per hectare)",
+  y_unit = "Total Phosphorus (mg/kg)"
+)
+
+# Available phosphorus
+plot_variances(
+  plot_mean = plot_data$available_phosphorus,
+  plot_sd = plot_data$sd_available_phosphorus, x_axis = plot_data$agb,
+  plot_name = "figures/available_phosphorus_vs_agb.png",
+  x_unit = "Above ground biomass (tonnes per hectare)",
+  y_unit = "Available Phosphorus (mg/kg)",
+  plot_title = "Variation in available phosphorus with LIDAR estimated biomass"
 )
