@@ -59,6 +59,47 @@ plot_variances <-
     dev.off()
   }
 
+make_box_plot <-
+  function(core_data, var_to_plot, plot_name, plot_title, y_unit) {
+    #' Make a box plot of individual sample data for a variable of interest
+    #'
+    #' This is written as a function because I basically repeat the same steps for
+    #' four different variables.
+    #'
+    #' @param core_data Full set of data for the cores
+    #' @param var_to_plot Name of variable to be plotted
+    #' @param plot_name File name to save plot under
+    #' @param plot_title Title for the plot
+    #' @param y_unit Unit of the plots y-axis
+    #' @return
+    #' @export
+
+    png(plot_name, width = 1200, height = 900)
+
+    # Increase margin sizes so that labels don't get clipped off
+    par(mar = c(6, 7, 4, 2))
+
+    plotting_formula <- reformulate("plot_code", response = var_to_plot)
+
+    boxes <- boxplot(plotting_formula, data = core_data, plot = FALSE)
+    bxp(boxes,
+      outline = FALSE, main = plot_title, cex.main = 2, ylab = y_unit,
+      cex.lab = 2
+    )
+    stripchart(plotting_formula,
+      data = core_data, method = "jitter", pch = 16,
+      vertical = TRUE, col = "blue", add = TRUE
+    )
+
+    legend("topright",
+      legend = c("Bulked sample", "Subsampled"),
+      col = c("red", "blue"), pch = 16
+    )
+
+    # Save plot by closing
+    dev.off()
+  }
+
 # First load in the data (only care about the plot level summaries). Need to
 # make sure to skip header information.
 plot_data <- readxl::read_xlsx(
@@ -221,4 +262,46 @@ plot_variances(
   x_unit = "Above ground biomass (tonnes per hectare)",
   y_unit = "Available Phosphorus (mg/kg)",
   plot_title = "Variation in available phosphorus with LIDAR estimated biomass"
+)
+
+# To make boxplots I need the full core data. Need to make sure to skip header
+# information.
+core_data <- readxl::read_xlsx(
+  "./output/SAFE_soil_nutrient_data.xlsx",
+  sheet = "CoreData", skip = 4, na = "NA"
+)
+
+# Plot total carbon
+make_box_plot(
+  core_data = core_data, var_to_plot = "total_carbon",
+  plot_name = "figures/box_plot_total_carbon.png",
+  plot_title = "Variation in total carbon with LIDAR estimated biomass",
+  y_unit = "Total Carbon (%)"
+)
+
+# total nitrogen
+make_box_plot(
+  core_data = core_data, var_to_plot = "total_nitrogen",
+  plot_name = "figures/box_plot_total_nitrogen.png",
+  plot_title = "Variation in total nitrogen with LIDAR estimated biomass",
+  y_unit = "Total Nitrogen (%)"
+)
+
+# total phosphorus
+make_box_plot(
+  core_data = core_data, var_to_plot = "total_phosphorus",
+  plot_name = "figures/box_plot_total_phosphorus.png",
+  plot_title = "Variation in total phosphorus with LIDAR estimated biomass",
+  y_unit = "Total Phosphorus (mg/kg)"
+)
+
+# available phosphorus
+make_box_plot(
+  core_data = core_data, var_to_plot = "available_phosphorus",
+  plot_name = "figures/box_plot_available_phosphorus.png",
+  plot_title = paste0(
+    "Variation in available phosphorus with LIDAR ",
+    "estimated biomass"
+  ),
+  y_unit = "Available Phosphorus (mg/kg)"
 )
