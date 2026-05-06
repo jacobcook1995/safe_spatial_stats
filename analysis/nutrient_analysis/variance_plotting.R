@@ -59,6 +59,46 @@ plot_variances <-
     dev.off()
   }
 
+plot_mean_vs_variance <-
+  function(plot_mean, plot_sd, plot_name, plot_title, x_unit, y_unit) {
+    #' Plot the mean vs variance for a given variable
+    #'
+    #' This is written as a function because I basically repeat the same steps for
+    #' four different variables.
+    #'
+    #' @param plot_mean Mean values of variable across the plots
+    #' @param plot_sd Standard deviations of the variable across the plots
+    #' @param plot_name File name to save plot under
+    #' @param plot_title Title for the plot
+    #' @param x_unit Unit of the plots x-axis
+    #' @param y_unit Unit of the plots y-axis
+    #' @return
+    #' @export
+
+    png(plot_name, width = 1200, height = 900)
+
+    # Increase margin sizes so that labels don't get clipped off
+    par(mar = c(6, 7, 4, 2))
+
+    # First plot/analyse rows where sd is not NA
+    idx <- !is.na(plot_sd)
+
+    plot(plot_mean[idx], plot_sd[idx],
+      pch = 16, xlab = x_unit, ylab = y_unit, main = plot_title, cex.lab = 2,
+      cex.main = 2, col = "black"
+    )
+    # Making a logarithmic model to test the relationship
+    model_log <- lm(log(plot_sd[idx]) ~ log(plot_mean[idx]))
+
+    # Plot line showing best fit prediction
+    log_intercept <- coef(model_log)[1]
+    curvature <- coef(model_log)[2]
+    curve(exp(log_intercept) * x^curvature, add = TRUE, col = "blue", lwd = 2) # nolint: object_usage_linter
+
+    # Save plot by closing
+    dev.off()
+  }
+
 make_plain_box_plot <-
   function(core_data, plot_data, var_to_plot, plot_name, plot_title, y_unit) {
     #' Make box plots of individual sample data for a variable of interest
@@ -360,7 +400,6 @@ make_plain_box_plot(
 )
 
 # Then plot the box plots that are shown in the context of the other data
-# TODO - WANT TO PLOT THE OTHER DATA AS WELL
 # Plot total carbon
 make_biomass_box_plot(
   core_data = core_data, plot_data = plot_data, var_to_plot = "total_carbon",
@@ -394,4 +433,47 @@ make_biomass_box_plot(
     "estimated biomass"
   ),
   y_unit = "Available Phosphorus (mg/kg)"
+)
+
+# TODO - STILL NEED TO ADD PROPER DENSITY KERNELS (COMPARING TOTAL DISTRIBUTION
+# OF MEANS VS SUBSAMPLED)
+# Now plot mean vs standard deviations
+# for total carbon
+plot_mean_vs_variance(
+  plot_mean = plot_data$total_carbon,
+  plot_sd = plot_data$sd_total_carbon,
+  plot_name = "figures/mean_vs_sd_total_carbon.png",
+  x_unit = "Mean total carbon (%)",
+  y_unit = "Standard deviation total carbon (%)",
+  plot_title = "Standard deviation vs mean for total carbon"
+)
+
+# total nitrogen
+plot_mean_vs_variance(
+  plot_mean = plot_data$total_nitrogen,
+  plot_sd = plot_data$sd_total_nitrogen,
+  plot_name = "figures/mean_vs_sd_total_nitrogen.png",
+  x_unit = "Mean total nitrogen (%)",
+  y_unit = "Standard deviation total nitrogen (%)",
+  plot_title = "Standard deviation vs mean for total nitrogen"
+)
+
+# total phosphorus
+plot_mean_vs_variance(
+  plot_mean = plot_data$total_phosphorus,
+  plot_sd = plot_data$sd_total_phosphorus,
+  plot_name = "figures/mean_vs_sd_total_phosphorus.png",
+  x_unit = "Mean total phosphorus (mg/kg)",
+  y_unit = "Standard deviation total phosphorus (mg/kg)",
+  plot_title = "Standard deviation vs mean for total phosphorus"
+)
+
+# available phosphorus
+plot_mean_vs_variance(
+  plot_mean = plot_data$available_phosphorus,
+  plot_sd = plot_data$sd_available_phosphorus,
+  plot_name = "figures/mean_vs_sd_available_phosphorus.png",
+  x_unit = "Mean available phosphorus (mg/kg)",
+  y_unit = "Standard deviation available phosphorus (mg/kg)",
+  plot_title = "Standard deviation vs mean for available phosphorus"
 )
