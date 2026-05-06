@@ -99,6 +99,51 @@ plot_mean_vs_variance <-
     dev.off()
   }
 
+plot_subsampled_distribution <-
+  function(plot_mean, plot_sd, plot_name, plot_title, x_unit) {
+    #' Plot the subsampled distribution relative to the full distribution
+    #'
+    #' These distributions are plotted relative to the mean value, as standard
+    #' deviation has been seen to grow with this value. It is written as a
+    #' function because I basically repeat the same steps for four different
+    #' variables.
+    #'
+    #' @param plot_mean Mean values of variable across the plots
+    #' @param plot_sd Standard deviations of the variable across the plots
+    #' @param plot_name File name to save plot under
+    #' @param plot_title Title for the plot
+    #' @param x_unit Unit of the plots x-axis
+    #' @return
+    #' @export
+
+    png(plot_name, width = 1200, height = 900)
+
+    # Increase margin sizes so that labels don't get clipped off
+    par(mar = c(6, 7, 4, 2))
+
+    # Find densities for all plots and subsampled plots
+    density_all <- density(plot_mean)
+    idx <- !is.na(plot_sd)
+    density_subsampled <- density(plot_mean[idx])
+
+    ylim_max <- max(density_all$y, density_subsampled$y)
+
+    plot(density_all,
+      ylim = c(0, ylim_max), main = plot_title, xlab = x_unit, cex.lab = 2,
+      cex.main = 2, lwd = 2
+    )
+
+    lines(density_subsampled, col = "red", lwd = 2)
+
+    legend("topright",
+      legend = c("All", "Subsampled"),
+      col = c("black", "red"), lwd = 2
+    )
+
+    # Save plot by closing
+    dev.off()
+  }
+
 make_plain_box_plot <-
   function(core_data, plot_data, var_to_plot, plot_name, plot_title, y_unit) {
     #' Make box plots of individual sample data for a variable of interest
@@ -107,6 +152,7 @@ make_plain_box_plot <-
     #' because I basically repeat the same steps for four different variables.
     #'
     #' @param core_data Full set of data for the cores
+    #' @param plot_data Full set of data for each plot
     #' @param var_to_plot Name of variable to be plotted
     #' @param plot_name File name to save plot under
     #' @param plot_title Title for the plot
@@ -435,8 +481,6 @@ make_biomass_box_plot(
   y_unit = "Available Phosphorus (mg/kg)"
 )
 
-# TODO - STILL NEED TO ADD PROPER DENSITY KERNELS (COMPARING TOTAL DISTRIBUTION
-# OF MEANS VS SUBSAMPLED)
 # Now plot mean vs standard deviations
 # for total carbon
 plot_mean_vs_variance(
@@ -476,4 +520,43 @@ plot_mean_vs_variance(
   x_unit = "Mean available phosphorus (mg/kg)",
   y_unit = "Standard deviation available phosphorus (mg/kg)",
   plot_title = "Standard deviation vs mean for available phosphorus"
+)
+
+# As sd clearly increases with the mean value, I should now plot overlayed
+# density plots showing the distribution of subsampled points relative to the
+# full distribution (along the mean value axis)
+# First do total carbon
+plot_subsampled_distribution(
+  plot_mean = plot_data$total_carbon,
+  plot_sd = plot_data$sd_total_carbon,
+  plot_name = "figures/sampling_total_carbon.png",
+  x_unit = "Mean total carbon (%)",
+  plot_title = "Distribution of plots by mean total carbon"
+)
+
+# Then total nitrogen
+plot_subsampled_distribution(
+  plot_mean = plot_data$total_nitrogen,
+  plot_sd = plot_data$sd_total_nitrogen,
+  plot_name = "figures/sampling_total_nitrogen.png",
+  x_unit = "Mean total nitrogen (%)",
+  plot_title = "Distribution of plots by mean total nitrogen"
+)
+
+# Total phosphorus
+plot_subsampled_distribution(
+  plot_mean = plot_data$total_phosphorus,
+  plot_sd = plot_data$sd_total_phosphorus,
+  plot_name = "figures/sampling_total_phosphorus.png",
+  x_unit = "Mean total phosphorus (mg/kg)",
+  plot_title = "Distribution of plots by mean total phosphorus"
+)
+
+# Available phosphorus
+plot_subsampled_distribution(
+  plot_mean = plot_data$available_phosphorus,
+  plot_sd = plot_data$sd_available_phosphorus,
+  plot_name = "figures/sampling_available_phosphorus.png",
+  x_unit = "Mean available phosphorus (mg/kg)",
+  plot_title = "Distribution of plots by mean available phosphorus"
 )
