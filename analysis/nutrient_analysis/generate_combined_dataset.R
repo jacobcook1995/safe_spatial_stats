@@ -755,7 +755,12 @@ wb_save(wb, "output/SAFE_soil_nutrient_data.xlsx")
 total_css <-
   rowSums(lab_data_physical[, c("Clay (%)", "Silt (%)", "Sand (%)"), drop = FALSE])
 
+png("figures/soil_texture_histogram.png", width = 1200, height = 900)
+# Increase margin sizes so that labels don't get clipped off
+par(mar = c(6, 7, 4, 2))
 hist(total_css,
   breaks = 50, col = "orange", main = "Clay + sand + silt",
-  xlab = "Combined clay, silt and sand (%)"
+  xlab = "Combined clay, silt and sand (%)", cex.lab = 2, cex.main = 2
 )
+# Save plot by closing
+dev.off()
