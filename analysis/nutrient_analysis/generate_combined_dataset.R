@@ -157,8 +157,8 @@ plot_code_map <- c(
 )
 # Read in the lab data for the physical properties (measured once per plot).
 lab_data_physical <- read_xlsx(
-  "./primary/S12_2024 & S1_2025 - Results.xlsx",
-  sheet = "S12_2024 (N = 104)"
+  "./primary/S12_2024 - Results (revised).xlsx",
+  sheet = "S12_2024 (revised)"
 )
 # Then replace the plot codes that differ with the versions used in epicollect
 lab_data_physical$`Sample ID` <-
@@ -173,7 +173,7 @@ clean_plot_data <-
     lab_data_physical[,
       c(
         "Sample ID", "Bulk density (g/cm3)",
-        "pH (in water)", "Clay (%)", "Silt (%)", "Sand (%)"
+        "pH (in water)", "Clay (%)", "Silt (%)", "Sand (%)", "Texture Class"
       ),
       drop = FALSE
     ],
@@ -500,8 +500,6 @@ all_column_metadata <- list(
       "based on this weight and the known volume of the corer."
     )
   ),
-  # TODO - Need to ask Rolando the details of this, i.e. whether it is percentage of the
-  # total or of the mineral component
   `Clay (%)` = list(
     new_name = "clay", field_type = "Numeric",
     description = "Fraction of the soil sample that is clay", units = "%",
@@ -525,6 +523,11 @@ all_column_metadata <- list(
       "Determined using pipette and wet sieving method. Analysed for a composite",
       "sample of all cores in a plot"
     )
+  ),
+  `Texture Class` = list(
+    new_name = "texture_class", field_type = "Categorical",
+    description = "The soil texture class of the plot",
+    levels = "Clay; Loam; Clay loam; Sandy loam; Sandy clay loam; Silty clay loam"
   ),
   plot_o_horizon_mean = list(
     new_name = "plot_mean_o_horizon", field_type = "Numeric",
@@ -704,7 +707,7 @@ names(clean_core_data)[names(clean_core_data) %in% names(core_rename_map)] <-
 # Define metadata categories and gather worksheet metadata to write out along with the
 # data itself
 metadata_categories <-
-  c("field_type", "description", "units", "method", "field_name")
+  c("field_type", "description", "units", "levels", "method", "field_name")
 
 get_or_na <- function(data, name) {
   if (!is.null(data[[name]])) data[[name]] else NA
@@ -748,19 +751,3 @@ wb$add_data(
 )
 
 wb_save(wb, "output/SAFE_soil_nutrient_data.xlsx")
-
-# ------------- Plotting --------------
-
-# Sum all the clay, silt and sand contents and then plot them as a histogram
-total_css <-
-  rowSums(lab_data_physical[, c("Clay (%)", "Silt (%)", "Sand (%)"), drop = FALSE])
-
-png("figures/soil_texture_histogram.png", width = 1200, height = 900)
-# Increase margin sizes so that labels don't get clipped off
-par(mar = c(6, 7, 4, 2))
-hist(total_css,
-  breaks = 50, col = "orange", main = "Clay + sand + silt",
-  xlab = "Combined clay, silt and sand (%)", cex.lab = 2, cex.main = 2
-)
-# Save plot by closing
-dev.off()
