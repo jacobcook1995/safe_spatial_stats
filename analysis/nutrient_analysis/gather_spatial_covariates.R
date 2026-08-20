@@ -76,6 +76,10 @@ for (i in seq_along(mosaic_folders)) {
   # Remove anomalous EVI values
   evi_raster[evi_raster > 1] <- NA
   evi_raster[evi_raster < -1] <- NA
+  # Finally add the number of observations to the raster
+  names(observations) <- "number_of_observations"
+  evi_raster <- c(evi_raster, observations)
+  # then add completed raster to the vector of rasters
   evi_rasters[[i]] <- evi_raster
 }
 print("EVI mosaics generated")
